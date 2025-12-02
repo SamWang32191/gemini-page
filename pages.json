@@ -1,0 +1,26 @@
+[
+    {
+        "title": "Go Learning Page",
+        "filename": "go-leaning.html",
+        "emoji": "🐹",
+        "description": "從 Java 到 Go：全方位遷移指南。了解 Go 語言的核心特性、併發模型和實用技巧。",
+        "tags": [
+            "Go 語言",
+            "併發程式",
+            "語法對比"
+        ],
+        "color": "blue"
+    },
+    {
+        "title": "Helm Learning Page",
+        "filename": "helm-leaning.html",
+        "emoji": "⚓",
+        "description": "Helm 領航員：給 SRE 的從零上手指南。掌握 Kubernetes 套件管理器的核心概念與操作。",
+        "tags": [
+            "Helm",
+            "Kubernetes",
+            "SRE"
+        ],
+        "color": "indigo"
+    }
+]
