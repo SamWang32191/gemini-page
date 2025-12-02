@@ -5,69 +5,127 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Page Index</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
         }
 
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            min-width: 300px;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
 
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
         }
 
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        li {
-            margin: 15px 0;
-        }
-
-        a {
-            text-decoration: none;
-            color: #3498db;
-            font-weight: 500;
-            font-size: 1.1rem;
-            padding: 8px 16px;
-            border: 1px solid #3498db;
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
             border-radius: 4px;
-            transition: all 0.3s ease;
-            display: inline-block;
-            width: 80%;
         }
 
-        a:hover {
-            background-color: #3498db;
-            color: white;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
     </style>
 </head>
 
-<body>
-    <div class="container">
-        <h1>Gemini Page Index</h1>
-        <ul>
-            <li><a href="go-leaning.html">Go Learning Page</a></li>
-            <li><a href="helm-leaning.html">Helm Learning Page</a></li>
-        </ul>
-    </div>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-800 text-white sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <div class="text-xl font-bold tracking-wider">📚 Gemini Learning Hub</div>
+                    <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded-full">Index</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow bg-slate-50 p-4 md:p-8 overflow-y-auto">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- Welcome Section -->
+            <div class="bg-white rounded-lg shadow p-6 border-l-4 border-indigo-500 mb-8">
+                <h1 class="text-3xl font-bold text-slate-800 mb-3">歡迎來到 Gemini Learning Hub</h1>
+                <p class="text-slate-600 leading-relaxed">
+                    這裡收集了各種技術學習資源，幫助你快速掌握不同的技術棧。選擇下方的主題開始你的學習之旅。
+                </p>
+            </div>
+
+            <!-- Learning Modules Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Go Learning Card -->
+                <a href="go-leaning.html" class="block">
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 card-hover h-full">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl">🐹</div>
+                            <div class="flex-1">
+                                <h2 class="text-xl font-bold text-slate-800 mb-2">Go Learning Page</h2>
+                                <p class="text-sm text-slate-600 mb-3">
+                                    從 Java 到 Go：全方位遷移指南。了解 Go 語言的核心特性、併發模型和實用技巧。
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Go 語言</span>
+                                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">併發程式</span>
+                                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">語法對比</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Helm Learning Card -->
+                <a href="helm-leaning.html" class="block">
+                    <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500 card-hover h-full">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl">⚓</div>
+                            <div class="flex-1">
+                                <h2 class="text-xl font-bold text-slate-800 mb-2">Helm Learning Page</h2>
+                                <p class="text-sm text-slate-600 mb-3">
+                                    Helm 領航員：給 SRE 的從零上手指南。掌握 Kubernetes 套件管理器的核心概念與操作。
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">Helm</span>
+                                    <span
+                                        class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">Kubernetes</span>
+                                    <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">SRE</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 text-center text-sm text-slate-500">
+            Gemini Learning Hub &copy; 2025. Created for learning purposes.
+        </div>
+    </footer>
+
 </body>
 
 </html>
