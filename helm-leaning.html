@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helm 領航員：給 SRE 的從零上手指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            /* Warm neutral background */
+            color: #334155;
+        }
+
+        pre,
+        code {
+            font-family: 'JetBrains+Mono', monospace;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .code-highlight {
+            transition: background-color 0.3s ease;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Corporate Tech (Slate, Indigo, Amber) for a calm, professional learning environment -->
+    <!-- Application Structure Plan: Dashboard-style SPA. 
+         1. 'Mission Control' (Overview): Compare Kustomize vs Helm context.
+         2. 'Anatomy' (Structure): Interactive file tree to understand the package format.
+         3. 'Lab' (Templating): Live interactive input-to-YAML generator to demystify templating.
+         4. 'Lifecycle' (Workflow): Process flow of commands. 
+         This structure moves from "Why" -> "What" -> "How" -> "Operations", mirroring the learning curve of an SRE. -->
+    <!-- Visualization & Content Choices: 
+         1. Radar Chart: To compare Kustomize vs Helm traits (Goal: Inform/Compare).
+         2. Interactive File Tree (DOM manipulation): To teach structure without static images (Goal: Organize).
+         3. Dynamic Text Replacement: To simulate templating engine (Goal: Change/Demonstrate).
+         4. Step-by-Step Process: For lifecycle commands (Goal: Inform).
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-800 text-white sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <div class="text-xl font-bold tracking-wider">⚓ Helm 領航員</div>
+                    <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded-full">SRE Edition</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <button onclick="switchTab('dashboard')"
+                            class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 transition-colors bg-slate-900"
+                            id="btn-dashboard">總覽與對比</button>
+                        <button onclick="switchTab('anatomy')"
+                            class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 transition-colors"
+                            id="btn-anatomy">Chart 結構解剖</button>
+                        <button onclick="switchTab('lab')"
+                            class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 transition-colors"
+                            id="btn-lab">模板實驗室</button>
+                        <button onclick="switchTab('workflow')"
+                            class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 transition-colors"
+                            id="btn-workflow">操作生命週期</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu placeholder -->
+        <div class="md:hidden bg-slate-800 border-t border-slate-700 p-2 flex justify-around">
+            <button onclick="switchTab('dashboard')" class="text-xs text-slate-300">總覽</button>
+            <button onclick="switchTab('anatomy')" class="text-xs text-slate-300">結構</button>
+            <button onclick="switchTab('lab')" class="text-xs text-slate-300">實驗</button>
+            <button onclick="switchTab('workflow')" class="text-xs text-slate-300">操作</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow bg-slate-50 p-4 md:p-8 overflow-y-auto">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- SECTION: DASHBOARD (Comparison) -->
+            <section id="dashboard" class="space-y-6 animate-fade-in">
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-indigo-500">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">為什麼 SRE 需要 Helm？</h2>
+                    <p class="text-slate-600 leading-relaxed">
+                        既然你已經熟悉 <code>Kustomize</code> 和 <code>ArgoCD</code>，你可能習慣了「Overlay（覆蓋）」的模式。Kustomize
+                        非常適合針對不同環境進行微小的數值修改。
+                        然而，當你需要將一套複雜的微服務（包含 Deployment, Service, Ingress, HPA, ConfigMap
+                        等）打包並分發給其他團隊，或者需要在不同環境間進行大幅度的邏輯切換（例如：Dev 環境不開啟 Ingress，Prod 環境開啟並配置 TLS）時，
+                        Kustomize 的 Patch 語法會變得冗長且難以維護。這就是 <strong>Helm (Kubernetes 的套件管理器)</strong> 進場的時機。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Text Context -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4">核心概念對比</h3>
+                        <div class="space-y-4">
+                            <div class="p-3 bg-slate-50 rounded border border-slate-200 hover:border-indigo-300 transition-colors cursor-pointer"
+                                onclick="highlightConcept('templating')">
+                                <h4 class="font-bold text-indigo-600">📦 打包方式</h4>
+                                <p class="text-sm text-slate-600 mt-1">
+                                    <span class="font-semibold">Kustomize:</span> 基於 Patch (修補) 與 Overlay (疊加)。<br>
+                                    <span class="font-semibold">Helm:</span> 基於 Templating (模板) 與 Values (變數)。
+                                </p>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded border border-slate-200 hover:border-indigo-300 transition-colors cursor-pointer"
+                                onclick="highlightConcept('release')">
+                                <h4 class="font-bold text-indigo-600">🚀 版本控制</h4>
+                                <p class="text-sm text-slate-600 mt-1">
+                                    <span class="font-semibold">Kustomize:</span> 依賴 Git Commit ID。<br>
+                                    <span class="font-semibold">Helm:</span> 有明確的 Chart Version (SemVer) 與 Release
+                                    Revision。
+                                </p>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded border border-slate-200 hover:border-indigo-300 transition-colors cursor-pointer"
+                                onclick="highlightConcept('logic')">
+                                <h4 class="font-bold text-indigo-600">🧠 邏輯能力</h4>
+                                <p class="text-sm text-slate-600 mt-1">
+                                    <span class="font-semibold">Kustomize:</span> 純聲明式，無邏輯控制。<br>
+                                    <span class="font-semibold">Helm:</span> 支援 If/Else, Loop, Pipe 等 Go Template 語法。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Radar Chart -->
+                    <div class="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center">
+                        <h3 class="text-lg font-semibold text-slate-700 mb-2 w-full text-left">工具特性雷達圖</h3>
+                        <div class="chart-container">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2 text-center">Helm 在可重用性與邏輯複雜度上佔優，Kustomize 在簡單性與原生支持上佔優。
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: ANATOMY (Structure) -->
+            <section id="anatomy" class="hidden space-y-6">
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-amber-500">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Helm Chart 的解剖學</h2>
+                    <p class="text-slate-600">
+                        Helm 的套件稱為 "Chart"。對於習慣 Kustomize <code>kustomization.yaml</code> 的你來說，這裡最大的不同在於：
+                        <span class="font-mono bg-slate-100 px-1 rounded">values.yaml</span> 是變數的來源，而 <span
+                            class="font-mono bg-slate-100 px-1 rounded">templates/</span> 資料夾是含有變數佔位符的 K8s YAML 檔案。
+                        點擊下方的檔案結構來查看詳細說明。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- File Tree Interactive -->
+                    <div class="col-span-1 bg-slate-800 text-slate-300 rounded-lg p-6 font-mono text-sm shadow-inner">
+                        <div class="mb-4 text-slate-400 text-xs uppercase tracking-widest">Project Structure</div>
+                        <ul class="space-y-2 cursor-pointer select-none">
+                            <li class="hover:text-white transition-colors" onclick="showFileDetail('chart')">
+                                <span class="mr-2">📂</span>my-app/
+                            </li>
+                            <li class="pl-6 hover:text-white transition-colors" onclick="showFileDetail('chartyaml')">
+                                <span class="mr-2">📄</span>Chart.yaml
+                            </li>
+                            <li class="pl-6 hover:text-white transition-colors" onclick="showFileDetail('values')">
+                                <span class="mr-2 text-yellow-400">📄</span>values.yaml <span
+                                    class="text-xs text-slate-500 ml-2">&lt;-- 重點</span>
+                            </li>
+                            <li class="pl-6 hover:text-white transition-colors" onclick="showFileDetail('charts')">
+                                <span class="mr-2">📂</span>charts/
+                            </li>
+                            <li class="pl-6 hover:text-white transition-colors" onclick="showFileDetail('templates')">
+                                <span class="mr-2 text-indigo-400">📂</span>templates/
+                            </li>
+                            <li class="pl-12 hover:text-white transition-colors" onclick="showFileDetail('deployment')">
+                                <span class="mr-2">📄</span>deployment.yaml
+                            </li>
+                            <li class="pl-12 hover:text-white transition-colors" onclick="showFileDetail('service')">
+                                <span class="mr-2">📄</span>service.yaml
+                            </li>
+                            <li class="pl-12 hover:text-white transition-colors" onclick="showFileDetail('helpers')">
+                                <span class="mr-2">📄</span>_helpers.tpl
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Detail Panel -->
+                    <div class="col-span-1 md:col-span-2 bg-white rounded-lg shadow p-6 flex flex-col justify-center">
+                        <div id="file-detail-content" class="transition-all duration-300">
+                            <div class="text-center text-slate-400">
+                                <div class="text-6xl mb-4">👆</div>
+                                <p>點擊左側檔案目錄以查看 SRE 需要關注的重點細節。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: LAB (Templating) -->
+            <section id="lab" class="hidden space-y-6">
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">模板實驗室：Go Template 實戰</h2>
+                    <p class="text-slate-600">
+                        這是 Helm 最強大但也最容易讓人困惑的地方。Helm 使用 Go template 語法將 <code>values.yaml</code> 的內容注入到
+                        <code>templates/</code> 中的 YAML 檔案。
+                        試著在左側修改變數，觀察右側最終生成的 Kubernetes YAML 變化。這模擬了 <code>helm template</code> 指令的效果。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8 border rounded-xl overflow-hidden shadow-lg">
+                    <!-- Input (Values.yaml sim) -->
+                    <div class="bg-slate-50 p-6 border-b lg:border-b-0 lg:border-r border-slate-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-700 font-mono">values.yaml (Input)</h3>
+                            <span class="text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded">User
+                                Configuration</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">replicaCount</label>
+                                <input type="number" id="input-replica" value="3"
+                                    class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    oninput="updateTemplate()">
+                                <p class="text-xs text-slate-400 mt-1">控制 Pod 的副本數量</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">image.repository</label>
+                                <input type="text" id="input-repo" value="nginx"
+                                    class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    oninput="updateTemplate()">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">image.tag</label>
+                                <input type="text" id="input-tag" value="1.21.0"
+                                    class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    oninput="updateTemplate()">
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-2">
+                                <input type="checkbox" id="input-ingress" class="w-4 h-4 text-indigo-600"
+                                    onchange="updateTemplate()">
+                                <label for="input-ingress" class="text-sm font-medium text-slate-700">enabledIngress
+                                    (Logic Check)</label>
+                            </div>
+                            <p class="text-xs text-slate-400 ml-6">勾選以模擬 <code>{{ if .Values.ingress.enabled }}</code>
+                                邏輯塊</p>
+                        </div>
+                    </div>
+
+                    <!-- Output (Deployment.yaml sim) -->
+                    <div class="bg-slate-900 p-6 text-slate-300 overflow-x-auto">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-green-400 font-mono">Resulting Manifest</h3>
+                            <span class="text-xs text-slate-500 border border-slate-600 px-2 py-1 rounded">Rendered
+                                Output</span>
+                        </div>
+                        <pre class="text-sm leading-relaxed"><code id="code-output">
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: <span id="out-replica" class="text-yellow-400 font-bold">3</span>
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-app
+          image: "<span id="out-repo" class="text-yellow-400">nginx</span>:<span id="out-tag" class="text-yellow-400">1.21.0</span>"
+          ports:
+            - containerPort: 80
+<div id="out-ingress-block" class="hidden opacity-50 transition-opacity duration-500">
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-ingress
+spec:
+  rules:
+    - host: "example.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app
+                port:
+                  number: 80
+</div></code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: WORKFLOW (Lifecycle) -->
+            <section id="workflow" class="hidden space-y-6">
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Helm 的操作生命週期</h2>
+                    <p class="text-slate-600">
+                        Helm 將一組 YAML 視為一個 "Release"。這與 <code>kubectl apply -k</code> 每次都是無狀態的應用不同，Helm 會在 K8s Cluster 內
+                        (透過 Secret) 記錄版本的歷史，這讓「回滾 (Rollback)」變得極其簡單。
+                        點擊下方流程圖的步驟來查看對應指令。
+                    </p>
+                </div>
+
+                <!-- Process Flow -->
+                <div class="relative py-10">
+                    <!-- Connecting Line -->
+                    <div
+                        class="absolute top-1/2 left-0 w-full h-1 bg-slate-200 -z-10 transform -translate-y-1/2 hidden md:block">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <!-- Step 1 -->
+                        <div class="relative group cursor-pointer" onclick="showWorkflowDetail('repo')">
+                            <div
+                                class="mx-auto w-12 h-12 bg-white border-2 border-indigo-500 rounded-full flex items-center justify-center text-xl shadow-md group-hover:bg-indigo-50 transition-colors z-10">
+                                1</div>
+                            <div class="text-center mt-2 font-bold text-slate-700">Add Repo</div>
+                            <div class="text-center text-xs text-slate-500">取得 Chart 來源</div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="relative group cursor-pointer" onclick="showWorkflowDetail('install')">
+                            <div
+                                class="mx-auto w-12 h-12 bg-white border-2 border-indigo-500 rounded-full flex items-center justify-center text-xl shadow-md group-hover:bg-indigo-50 transition-colors z-10">
+                                2</div>
+                            <div class="text-center mt-2 font-bold text-slate-700">Install</div>
+                            <div class="text-center text-xs text-slate-500">首次部署</div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="relative group cursor-pointer" onclick="showWorkflowDetail('upgrade')">
+                            <div
+                                class="mx-auto w-12 h-12 bg-white border-2 border-indigo-500 rounded-full flex items-center justify-center text-xl shadow-md group-hover:bg-indigo-50 transition-colors z-10">
+                                3</div>
+                            <div class="text-center mt-2 font-bold text-slate-700">Upgrade</div>
+                            <div class="text-center text-xs text-slate-500">變更配置與更新</div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="relative group cursor-pointer" onclick="showWorkflowDetail('history')">
+                            <div
+                                class="mx-auto w-12 h-12 bg-white border-2 border-indigo-500 rounded-full flex items-center justify-center text-xl shadow-md group-hover:bg-indigo-50 transition-colors z-10">
+                                4</div>
+                            <div class="text-center mt-2 font-bold text-slate-700">List/History</div>
+                            <div class="text-center text-xs text-slate-500">查看版本紀錄</div>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div class="relative group cursor-pointer" onclick="showWorkflowDetail('rollback')">
+                            <div
+                                class="mx-auto w-12 h-12 bg-white border-2 border-orange-500 rounded-full flex items-center justify-center text-xl shadow-md group-hover:bg-orange-50 transition-colors z-10">
+                                5</div>
+                            <div class="text-center mt-2 font-bold text-slate-700">Rollback</div>
+                            <div class="text-center text-xs text-slate-500">緊急還原</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow Detail Card -->
+                <div class="bg-slate-800 rounded-lg p-6 text-slate-300 shadow-xl mt-6 min-h-[150px]">
+                    <div id="workflow-content">
+                        <p class="text-center italic text-slate-500">點擊上方步驟查看對應的 SRE 指令與說明...</p>
+                    </div>
+                </div>
+
+                <!-- ArgoCD Note -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 flex items-start gap-3">
+                    <span class="text-2xl">💡</span>
+                    <div>
+                        <h4 class="font-bold text-blue-800">關於 ArgoCD</h4>
+                        <p class="text-sm text-blue-700">
+                            雖然這裡是手動指令，但在 ArgoCD 中，你只需要在 Application 的 Source 設定中將類別改為 <code>Helm</code>，並指定
+                            <code>valueFiles</code> 或 <code>parameters</code>。ArgoCD 會在背景執行 <code>helm template</code>
+                            邏輯，並幫你做 sync。你不再需要手動下 <code>helm install</code>，但理解這些指令對於除錯 (Debug) 至關重要。
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 text-center text-sm text-slate-500">
+            Helm Learning Module for SREs &copy; 2023. Generated by Canvas Create.
+        </div>
+    </footer>
+
+    <script>
+        // State Management
+        const state = {
+            currentTab: 'dashboard',
+            fileDetails: {
+                'chart': { title: 'Project Root', desc: 'Helm Chart 的根目錄，通常與應用程式名稱相同。' },
+                'chartyaml': { title: 'Chart.yaml', desc: '<b>中繼資料定義檔</b>。<br>包含 Chart 的名稱、版本(version)以及應用程式版本(appVersion)。<br>SRE 必須注意 `version` 欄位，這決定了 Artifact Hub 上的版號。' },
+                'values': { title: 'values.yaml', desc: '<b>預設變數檔</b>。<br>這是最常修改的檔案。定義了模板中所有變數的預設值（例如 replicaCount: 1）。<br>在 ArgoCD 中，我們通常會另外建立 `values-prod.yaml` 來覆蓋這裡的設定。' },
+                'charts': { title: 'charts/', desc: '<b>依賴管理 (Subcharts)</b>。<br>如果你的應用程式依賴其他 Chart (例如 Redis, Postgres)，這些依賴包會被下載到這裡。類似 npm_modules。' },
+                'templates': { title: 'templates/', desc: '<b>Kubernetes Manifest 模板</b>。<br>這裡存放了混合 Go Template 語法的 .yaml 檔案。Helm 會讀取 values.yaml 的值，填入這些模板，最後產出純 YAML 給 K8s。' },
+                'deployment': { title: 'templates/deployment.yaml', desc: '<b>主程式部署檔</b>。<br>你會看到大量 `{{ .Values.image.repository }}` 語法。這是定義 Pod 如何運行的核心。' },
+                'service': { title: 'templates/service.yaml', desc: '<b>服務定義檔</b>。<br>定義 ClusterIP 或 LoadBalancer，讓流量能進入 Pod。' },
+                'helpers': { title: 'templates/_helpers.tpl', desc: '<b>輔助函數</b>。<br>定義可重複使用的模板片段 (Partials)，例如標準的 Labels 生成邏輯。以 `_` 開頭的檔案不會被渲染成 K8s 物件。' }
+            },
+            workflowDetails: {
+                'repo': { title: 'helm repo add', cmd: 'helm repo add [NAME] [URL]<br>helm repo update', desc: '類似 `apt-get update`。在使用別人的 Chart (如 Bitnami) 前，需先加入他們的倉庫來源。' },
+                'install': { title: 'helm install', cmd: 'helm install [RELEASE_NAME] [CHART_PATH] -f values.yaml', desc: '首次部署。這會在 K8s 中建立一個 Release 物件。注意：Release Name 在該 Namespace 中必須唯一。' },
+                'upgrade': { title: 'helm upgrade', cmd: 'helm upgrade [RELEASE_NAME] [CHART_PATH] -f new-values.yaml', desc: '更新現有的 Release。Helm 會計算差異 (Diff) 並只更新變更的部分。' },
+                'history': { title: 'helm history', cmd: 'helm history [RELEASE_NAME]', desc: '列出該 Release 的所有版本紀錄。你可以看到 Revision 1, 2, 3... 以及部署狀態 (deployed, failed)。' },
+                'rollback': { title: 'helm rollback', cmd: 'helm rollback [RELEASE_NAME] [REVISION_NO]', desc: '救命指令。當新版本炸掉時，直接回到上一個穩定版本 (Revision)。這是 Kustomize 較難直接做到的。' }
+            }
+        };
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            renderComparisonChart();
+            switchTab('dashboard');
+        });
+
+        // Navigation Logic
+        function switchTab(tabId) {
+            // Hide all sections
+            ['dashboard', 'anatomy', 'lab', 'workflow'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(`btn-${id}`).classList.remove('bg-slate-900', 'text-white');
+                document.getElementById(`btn-${id}`).classList.add('text-slate-300', 'hover:text-white'); // Reset logic for clarity
+                // Re-apply base nav styles for inactive
+                const btn = document.getElementById(`btn-${id}`);
+                btn.className = "nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 transition-colors text-slate-300";
+            });
+
+            // Show active section
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.className = "nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-slate-700 transition-colors bg-slate-900 text-white";
+        }
+
+        // Dashboard Chart
+        function renderComparisonChart() {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['學習曲線', '邏輯靈活性', '多環境管理', '打包重用性', 'GitOps 原生性', '除錯難度'],
+                    datasets: [{
+                        label: 'Kustomize',
+                        data: [9, 3, 7, 4, 9, 8], // Kustomize: Easy to learn, low logic, good gitops, easy debug
+                        fill: true,
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)', // Amber
+                        borderColor: 'rgb(245, 158, 11)',
+                        pointBackgroundColor: 'rgb(245, 158, 11)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(245, 158, 11)'
+                    }, {
+                        label: 'Helm',
+                        data: [5, 9, 8, 10, 7, 5], // Helm: Harder learn, high logic, high reuse, harder debug
+                        fill: true,
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)', // Indigo
+                        borderColor: 'rgb(99, 102, 241)',
+                        pointBackgroundColor: 'rgb(99, 102, 241)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(99, 102, 241)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { display: true },
+                            suggestedMin: 0,
+                            suggestedMax: 10,
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: {
+                                font: { size: 12, family: "'Noto Sans TC', sans-serif" }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + context.raw + '/10';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Anatomy Interaction
+        function showFileDetail(fileKey) {
+            const contentDiv = document.getElementById('file-detail-content');
+            const data = state.fileDetails[fileKey];
+
+            contentDiv.innerHTML = `
+                <div class="animate-fade-in">
+                    <h3 class="text-xl font-bold text-slate-800 border-b pb-2 mb-3">${data.title}</h3>
+                    <p class="text-slate-600 leading-relaxed">${data.desc}</p>
+                </div>
+            `;
+        }
+
+        // Lab Interaction (Templating)
+        function updateTemplate() {
+            const replica = document.getElementById('input-replica').value;
+            const repo = document.getElementById('input-repo').value;
+            const tag = document.getElementById('input-tag').value;
+            const ingressEnabled = document.getElementById('input-ingress').checked;
+
+            // Update DOM elements mimicking code
+            document.getElementById('out-replica').innerText = replica;
+            document.getElementById('out-repo').innerText = repo;
+            document.getElementById('out-tag').innerText = tag;
+
+            const ingressBlock = document.getElementById('out-ingress-block');
+            if (ingressEnabled) {
+                ingressBlock.classList.remove('hidden');
+                setTimeout(() => ingressBlock.classList.remove('opacity-50'), 50);
+            } else {
+                ingressBlock.classList.add('opacity-50');
+                setTimeout(() => ingressBlock.classList.add('hidden'), 300);
+            }
+        }
+
+        // Workflow Interaction
+        function showWorkflowDetail(stepKey) {
+            const contentDiv = document.getElementById('workflow-content');
+            const data = state.workflowDetails[stepKey];
+
+            contentDiv.innerHTML = `
+                <div class="animate-fade-in">
+                    <div class="flex items-center gap-3 mb-2">
+                        <h3 class="text-xl font-bold text-white">${data.title}</h3>
+                    </div>
+                    <div class="bg-black/30 p-3 rounded font-mono text-green-400 text-sm mb-3 border-l-4 border-green-500">
+                        ${data.cmd}
+                    </div>
+                    <p class="text-slate-300 leading-relaxed">${data.desc}</p>
+                </div>
+            `;
+        }
+
+        // CSS Animation Helper
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(5px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-out forwards;
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+    </script>
+</body>
+
+</html>
