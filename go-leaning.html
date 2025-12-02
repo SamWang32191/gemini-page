@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>從 Java 到 Go：全方位遷移指南 (Java to Go Migration Guide)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#fdfbf7',       // Warm neutral background
+                            text: '#2d3748',     // Dark grey text
+                            primary: '#00add8',  // Go Gopher Blue
+                            secondary: '#f58219',// Java Orange (muted)
+                            accent: '#5dc9e2',   // Lighter Go Blue
+                            muted: '#e2e8f0',
+                            card: '#ffffff'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['Menlo', 'Monaco', 'Courier New', 'monospace'],
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fdfbf7;
+            color: #2d3748;
+        }
+        /* Chart Container Strict Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        
+        .code-block {
+            background-color: #1a202c;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        
+        .nav-active {
+            border-bottom: 3px solid #00add8;
+            color: #00add8;
+            font-weight: 600;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar for code blocks */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0; 
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutral Background (#fdfbf7) with Go Blue (#00add8) and Muted Java Orange (#f58219) for contrast. -->
+    <!-- Application Structure Plan: The app is designed as an interactive 'Migration Dashboard'. It moves from high-level philosophy (Why Go?) to specific syntax comparisons, then deeper into data structures and OOP changes, culminating in concurrency. This linear yet tab-accessible structure helps a Java developer map their existing mental models to Go paradigms without getting overwhelmed. -->
+    <!-- Visualization & Content Choices: 
+         1. Radar Chart: To visually compare language characteristics (Verbosity, Performance, Concurrency) - quick mental alignment.
+         2. Interactive Code Diff: To allow direct comparison of specific patterns (Java vs Go) - purely functional for learning syntax.
+         3. Dynamic Bar/Line Charts: To simulate the resource efficiency of Goroutines vs Threads - demonstrating the 'Why'.
+         4. Interactive Lists/Grids: For Data Structures and OOP concepts - categorized information organization.
+         All visualizations use Chart.js Canvas or HTML/CSS layout. NO SVG. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl">☕ ➔ 🐹</div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Java to Go 遷移指南</h1>
+                        <p class="text-xs text-gray-500">專為 Java 工程師設計的互動學習路徑</p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex space-x-8" id="main-nav">
+                    <!-- Nav items injected by JS -->
+                </nav>
+            </div>
+        </div>
+        <!-- Mobile Nav Menu (Simple Select) -->
+        <div class="md:hidden px-4 py-2 border-t">
+            <select id="mobile-nav-select" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary p-2">
+                <!-- Options injected by JS -->
+            </select>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Section: Overview -->
+        <section id="section-overview" class="fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">為什麼 Java 工程師要學 Go？</h2>
+                    <p class="text-gray-600 mb-4 leading-relaxed">
+                        作為一名 Java 開發者，你已經熟悉了 JVM、龐大的生態系統和物件導向設計。Go (Golang) 提供了另一種視角：<strong>簡潔、高效能且天生支援併發</strong>。
+                    </p>
+                    <p class="text-gray-600 mb-4 leading-relaxed">
+                        本區域透過數據視覺化，幫助你快速建立對這兩種語言特性的心智模型。請注意圖表中的差異，這代表了你需要調整思維的地方。
+                    </p>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="font-semibold text-lg mb-2">核心哲學差異</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <span class="text-brand-secondary mr-2">●</span>
+                                <span><strong>Java:</strong> 功能豐富，強調抽象與設計模式 (Write Once, Run Anywhere)。</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-brand-primary mr-2">●</span>
+                                <span><strong>Go:</strong> 少即是多，強調工程實用性與編譯速度 (Keep It Simple)。</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-gray-400 mr-2">➤</span>
+                                <span class="text-sm text-gray-500">提示：Go 沒有 Class，沒有繼承，沒有 try-catch，甚至沒有泛型(直到最近)。這不是缺點，是設計選擇。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center justify-center bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="text-center font-semibold text-gray-700 mb-2">語言特性雷達圖比較</h3>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-400 mt-2">數值基於開發者體驗與常見架構特性的相對比較</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-brand-primary">
+                    <div class="text-2xl mb-2">🚀</div>
+                    <h3 class="font-bold text-lg">啟動速度</h3>
+                    <p class="text-sm text-gray-600">Go 編譯成二進位檔，無 VM 暖機時間，CLI 工具與 Microservices 啟動極快。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-brand-primary">
+                    <div class="text-2xl mb-2">🧠</div>
+                    <h3 class="font-bold text-lg">記憶體佔用</h3>
+                    <p class="text-sm text-gray-600">Go 程式通常只佔用數 MB，相比 Java 應用起步數百 MB，更適合容器化部署。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-brand-primary">
+                    <div class="text-2xl mb-2">⚡</div>
+                    <h3 class="font-bold text-lg">併發模型</h3>
+                    <p class="text-sm text-gray-600">Goroutines 是輕量級線程。你可以輕鬆啟動數萬個 Goroutines 而不耗盡資源。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Syntax Rosetta Stone -->
+        <section id="section-syntax" class="hidden fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">語法羅塞塔石碑 (Rosetta Stone)</h2>
+                <p class="text-gray-600">
+                    這是一個互動式的程式碼對照工具。選擇左側的情境，觀察 Java 與 Go 在語法上的具體差異。
+                    <br><span class="text-sm text-brand-secondary font-semibold">注意：Go 強制程式碼格式 (gofmt)，且變數宣告了若不使用會導致編譯錯誤。</span>
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Topic Selector -->
+                <div class="lg:col-span-3 space-y-2">
+                    <h3 class="font-bold text-gray-700 mb-2">選擇主題：</h3>
+                    <div id="syntax-buttons" class="flex flex-col space-y-2">
+                        <!-- Buttons injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Code Comparison Area -->
+                <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Java Side -->
+                    <div class="bg-gray-800 rounded-lg overflow-hidden flex flex-col h-full shadow-lg">
+                        <div class="bg-brand-secondary text-white px-4 py-2 text-sm font-bold flex justify-between">
+                            <span>Java</span>
+                            <span>.java</span>
+                        </div>
+                        <div class="p-4 flex-grow overflow-auto relative group">
+                            <pre><code id="java-code" class="text-sm text-gray-300 font-mono">Select a topic...</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Go Side -->
+                    <div class="bg-gray-800 rounded-lg overflow-hidden flex flex-col h-full shadow-lg border-2 border-brand-primary">
+                        <div class="bg-brand-primary text-white px-4 py-2 text-sm font-bold flex justify-between">
+                            <span>Go</span>
+                            <span>.go</span>
+                        </div>
+                        <div class="p-4 flex-grow overflow-auto relative">
+                            <pre><code id="go-code" class="text-sm text-gray-100 font-mono">Select a topic...</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explanation Box -->
+            <div id="syntax-explanation" class="mt-6 bg-blue-50 border border-blue-100 p-4 rounded-lg text-blue-800 text-sm">
+                <!-- Dynamic explanation injected here -->
+            </div>
+        </section>
+
+        <!-- Section: Data Structures -->
+        <section id="section-structures" class="hidden fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">資料結構的思維轉變</h2>
+                <p class="text-gray-600">
+                    Java 開發者習慣使用 <code>ArrayList</code>, <code>HashMap</code>。在 Go 中，這些對應到底層更透明的結構：<code>Slice</code> 和 <code>Map</code>。
+                    最需要適應的概念是 <strong>Slice (切片)</strong>，它是陣列的動態視窗。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Interactive Slice Visualizer -->
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Slice 運作模擬器</h3>
+                    <p class="text-sm text-gray-500 mb-4">點擊「Append」按鈕，觀察 Slice 的 Length (長度) 與 Capacity (容量) 如何變化。注意當 Capacity 不足時，Go 會分配新的底層陣列。</p>
+                    
+                    <div class="flex gap-4 mb-6">
+                        <button id="btn-append" class="bg-brand-primary hover:bg-cyan-600 text-white px-4 py-2 rounded transition shadow">
+                            Append Element
+                        </button>
+                        <button id="btn-reset-slice" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded transition">
+                            Reset
+                        </button>
+                    </div>
+
+                    <div class="mb-2 flex justify-between text-sm font-mono">
+                        <span>Length (len): <span id="slice-len" class="font-bold text-brand-primary">0</span></span>
+                        <span>Capacity (cap): <span id="slice-cap" class="font-bold text-brand-secondary">0</span></span>
+                    </div>
+
+                    <!-- Visual Representation -->
+                    <div class="border-2 border-dashed border-gray-300 p-2 rounded min-h-[80px] flex items-center flex-wrap gap-2" id="slice-visual-container">
+                        <!-- Boxes injected here -->
+                        <span class="text-gray-400 text-sm italic w-full text-center" id="slice-placeholder">Slice is empty</span>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                        <strong>Go Code:</strong> <code>s = append(s, val)</code><br>
+                        當 len 超過 cap 時，底層 array 會擴容（通常是 2 倍），並將舊資料複製過去。
+                    </div>
+                </div>
+
+                <!-- Comparison Table -->
+                <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">對照表</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 font-medium text-brand-secondary">Java Collection</th>
+                                    <th class="px-4 py-2 font-medium text-brand-primary">Go Equivalent</th>
+                                    <th class="px-4 py-2 font-medium text-gray-600">關鍵差異</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="px-4 py-3 font-mono">Array []</td>
+                                    <td class="px-4 py-3 font-mono">[N]T</td>
+                                    <td class="px-4 py-3">Go 陣列是值類型 (Value Type)，賦值會發生複製，且長度固定。</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-mono">ArrayList</td>
+                                    <td class="px-4 py-3 font-mono">[]T (Slice)</td>
+                                    <td class="px-4 py-3">Slice 是陣列的 View。輕量、強大，是 Go 中最常用的結構。</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-mono">HashMap</td>
+                                    <td class="px-4 py-3 font-mono">map[K]V</td>
+                                    <td class="px-4 py-3">非線程安全。使用 <code>delete(m, k)</code> 刪除。</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-mono">Class (DTO)</td>
+                                    <td class="px-4 py-3 font-mono">struct</td>
+                                    <td class="px-4 py-3">只有欄位，沒有方法。方法是定義在 struct 之外的。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: OOP vs Composition -->
+        <section id="section-oop" class="hidden fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">物件導向的消亡？組合 (Composition) 的崛起</h2>
+                <p class="text-gray-600">
+                    這可能是最讓 Java 工程師震驚的：<strong>Go 沒有 <code>class</code>，沒有 <code>extends</code></strong>。
+                    Go 使用 <code>struct</code> 來保存數據，使用 <code>interface</code> 來定義行為（隱式實現），並透過 <strong>Embedding (嵌入)</strong> 來達到複用的效果。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Concept Card 1: Methods -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                    <div class="p-1 bg-brand-secondary"></div>
+                    <div class="p-6">
+                        <h3 class="font-bold text-xl text-gray-800 mb-2">方法 (Methods)</h3>
+                        <p class="text-sm text-gray-600 mb-4">Java 方法屬於類別內部。Go 方法是附著在型別上的函數。</p>
+                        <div class="bg-gray-100 p-3 rounded text-xs font-mono text-gray-700">
+                            <span class="text-purple-600">func</span> (d <span class="text-brand-primary">Dog</span>) <span class="text-blue-600">Bark</span>() { ... }
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">這裡的 <code>(d Dog)</code> 稱為 Receiver，類似 Java 的 <code>this</code>，但必須顯式宣告。</p>
+                    </div>
+                </div>
+
+                <!-- Concept Card 2: Interfaces -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                    <div class="p-1 bg-brand-primary"></div>
+                    <div class="p-6">
+                        <h3 class="font-bold text-xl text-gray-800 mb-2">介面 (Interfaces)</h3>
+                        <p class="text-sm text-gray-600 mb-4">Duck Typing：如果它走起來像鴨子，它就是鴨子。不需要 <code>implements</code> 關鍵字。</p>
+                        <div class="bg-gray-100 p-3 rounded text-xs font-mono text-gray-700">
+                            <span class="text-purple-600">type</span> Eater <span class="text-purple-600">interface</span> { Eat() }
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">只要你的 Struct 有 <code>Eat()</code> 方法，它就自動實現了 <code>Eater</code> 介面。</p>
+                    </div>
+                </div>
+
+                <!-- Concept Card 3: Composition -->
+                <div class="col-span-1 md:col-span-2 bg-white rounded-lg shadow-md overflow-hidden p-6 border border-gray-200">
+                    <h3 class="font-bold text-xl text-gray-800 mb-4">繼承 vs 組合 (Embedding)</h3>
+                    <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                        <div class="text-center w-full md:w-1/2">
+                            <h4 class="font-semibold text-brand-secondary mb-2">Java (Inheritance)</h4>
+                            <div class="border border-gray-300 p-4 rounded bg-gray-50">
+                                <div class="bg-gray-200 p-2 rounded mb-2">Animal (Base)</div>
+                                <div class="text-2xl text-gray-400">⬇ extends</div>
+                                <div class="bg-orange-100 p-2 rounded mt-2 border border-orange-200">Dog (Subclass)</div>
+                            </div>
+                        </div>
+                        <div class="text-2xl text-gray-300">VS</div>
+                        <div class="text-center w-full md:w-1/2">
+                            <h4 class="font-semibold text-brand-primary mb-2">Go (Embedding)</h4>
+                            <div class="border border-gray-300 p-4 rounded bg-gray-50 relative">
+                                <div class="bg-blue-100 p-6 rounded border border-blue-200 relative z-10">
+                                    Dog (Struct)
+                                    <div class="absolute top-2 right-2 bg-gray-200 text-xs p-1 rounded">Animal</div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">Dog "包含" 了 Animal，所以可以直接呼叫 Animal 的方法。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Concurrency -->
+        <section id="section-concurrency" class="hidden fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">併發：Goroutines 與 Channels</h2>
+                <p class="text-gray-600">
+                    這是 Go 的殺手級應用。Java Thread 對應 OS Thread，成本高（約 1MB Stack）。
+                    <strong>Goroutine</strong> 是用戶態線程，初始僅 2KB Stack，由 Go Runtime 調度。
+                    <strong>Channel</strong> 則是用來在 Goroutine 之間安全傳遞資料的管道，取代了複雜的鎖 (Lock) 機制。
+                </p>
+                <blockquote class="border-l-4 border-brand-primary pl-4 italic text-gray-500 my-4">
+                    "Do not communicate by sharing memory; instead, share memory by communicating."
+                </blockquote>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Simulation Controls -->
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="bg-white p-5 rounded-lg shadow border border-gray-200">
+                        <h3 class="font-bold text-gray-800 mb-3">資源消耗模擬</h3>
+                        <p class="text-sm text-gray-500 mb-4">模擬啟動 1000 個並發任務。</p>
+                        
+                        <div class="space-y-3">
+                            <button id="btn-sim-java" class="w-full bg-brand-secondary hover:bg-orange-600 text-white py-2 rounded transition flex justify-between px-4 items-center">
+                                <span>啟動 Java Threads</span>
+                                <span class="text-xs bg-white text-brand-secondary px-2 py-1 rounded">Heavy</span>
+                            </button>
+                            <button id="btn-sim-go" class="w-full bg-brand-primary hover:bg-cyan-600 text-white py-2 rounded transition flex justify-between px-4 items-center">
+                                <span>啟動 Goroutines</span>
+                                <span class="text-xs bg-white text-brand-primary px-2 py-1 rounded">Light</span>
+                            </button>
+                            <button id="btn-sim-reset" class="w-full border border-gray-300 text-gray-600 py-2 rounded hover:bg-gray-50">
+                                重置圖表
+                            </button>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-100 text-sm">
+                            <h4 class="font-semibold mb-2">Go 語法範例：</h4>
+                            <div class="bg-gray-800 text-gray-200 p-2 rounded font-mono text-xs">
+                                <span class="text-purple-400">go</span> func() {<br>
+                                &nbsp;&nbsp;doWork()<br>
+                                }()
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Chart -->
+                <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow border border-gray-200">
+                    <h3 class="font-bold text-center text-gray-700 mb-2">模擬記憶體佔用 (MB) 隨時間變化</h3>
+                    <div class="chart-container">
+                        <canvas id="concurrencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Ecosystem -->
+        <section id="section-ecosystem" class="hidden fade-in">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">下一步：工具與生態系統</h2>
+                
+                <div class="space-y-6">
+                    <!-- Tool 1 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
+                        <div class="bg-green-100 p-3 rounded-full text-green-600 text-xl">📦</div>
+                        <div>
+                            <h3 class="font-bold text-lg">Go Modules (go.mod)</h3>
+                            <p class="text-gray-600 text-sm mt-1">
+                                類似 Java 的 Maven/Gradle，但內建於語言中。不再需要複雜的 XML 設定檔。
+                                <br><code class="bg-gray-100 px-1 rounded text-xs">go mod init myapp</code>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Tool 2 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
+                        <div class="bg-red-100 p-3 rounded-full text-red-600 text-xl">⚠️</div>
+                        <div>
+                            <h3 class="font-bold text-lg">錯誤處理 (Error Handling)</h3>
+                            <p class="text-gray-600 text-sm mt-1">
+                                Go 沒有 Exception。錯誤只是普通的值。
+                                <br>這強迫開發者在錯誤發生的地方立即處理它，雖然寫起來較繁瑣 (<code>if err != nil</code>)，但程式碼邏輯更清晰強健。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Tool 3 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-start gap-4">
+                        <div class="bg-blue-100 p-3 rounded-full text-blue-600 text-xl">🛠</div>
+                        <div>
+                            <h3 class="font-bold text-lg">標準工具鏈</h3>
+                            <p class="text-gray-600 text-sm mt-1">
+                                <ul class="list-disc ml-4 mt-2 space-y-1">
+                                    <li><code>go fmt</code>: 統一格式化 (再也不用爭論括號放哪裡)。</li>
+                                    <li><code>go test</code>: 內建單元測試與效能測試 (Benchmark)。</li>
+                                    <li><code>go vet</code>: 靜態程式碼分析。</li>
+                                </ul>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-10 text-center">
+                    <p class="text-gray-500 mb-4">準備好開始寫第一行 Go 程式碼了嗎？</p>
+                    <a href="https://go.dev/tour/" target="_blank" class="inline-block bg-brand-primary hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg transition shadow-lg transform hover:-translate-y-1">
+                        開始 Go Tour (官方互動教學)
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-8 mt-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>&copy; 2025 Java to Go Interactive Guide. Created for learning purposes.</p>
+            <p class="text-xs mt-2">Built with Tailwind CSS & Chart.js. No SVG.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Data & State ---
+        const sections = ['overview', 'syntax', 'structures', 'oop', 'concurrency', 'ecosystem'];
+        const navLabels = {
+            'overview': '總覽',
+            'syntax': '基礎語法',
+            'structures': '資料結構',
+            'oop': '物件導向',
+            'concurrency': '併發程式',
+            'ecosystem': '生態系統'
+        };
+
+        const codeExamples = {
+            'hello': {
+                title: 'Hello World',
+                java: `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
+                go: `package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, World!")\n}`,
+                desc: 'Go 程式必須屬於一個 package。main package 是程式入口。注意 Go 不需要 Class 包裝，且分號是選用的。'
+            },
+            'variables': {
+                title: '變數與型別',
+                java: `String name = "Java";\nint count = 10;\nfinal double PI = 3.14;`,
+                go: `var name string = "Go"\ncount := 10 // Type inference\nconst Pi = 3.14`,
+                desc: 'Go 推薦使用 `:=` 進行短變數宣告（只能在函數內使用）。型別通常放在變數名稱後面。'
+            },
+            'loops': {
+                title: '迴圈 (Loops)',
+                java: `// While loop\nwhile (i < 5) { ... }\n\n// For loop\nfor (int i=0; i<5; i++) { ... }`,
+                go: `// Only 'for' exists in Go\nfor i < 5 { ... } // acts like while\n\nfor i := 0; i < 5; i++ { ... }`,
+                desc: 'Go 只有 `for` 關鍵字，沒有 `while` 或 `do-while`。這簡化了關鍵字數量。'
+            },
+            'functions': {
+                title: '多返回值',
+                java: `// Java usually returns an Object or Array\npublic String[] getInfo() {\n    return new String[]{"Name", "ID"};\n}`,
+                go: `func getInfo() (string, string) {\n    return "Name", "ID"\n}\n\n// Usage\nname, id := getInfo()`,
+                desc: 'Go 支援多重回傳值，這在錯誤處理中非常常用 (result, err)。'
+            }
+        };
+
+        // --- Chart Initialization ---
+        let radarChartInstance = null;
+        let concurrencyChartInstance = null;
+
+        function initRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Verbosity (冗長度)', 'Learning Curve', 'Build Speed', 'Runtime Perf', 'Concurrency', 'Tooling'],
+                    datasets: [{
+                        label: 'Java',
+                        data: [9, 6, 4, 8, 6, 9],
+                        fill: true,
+                        backgroundColor: 'rgba(245, 130, 25, 0.2)',
+                        borderColor: '#f58219',
+                        pointBackgroundColor: '#f58219',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#f58219'
+                    }, {
+                        label: 'Go',
+                        data: [3, 4, 9, 9, 10, 8],
+                        fill: true,
+                        backgroundColor: 'rgba(0, 173, 216, 0.2)',
+                        borderColor: '#00add8',
+                        pointBackgroundColor: '#00add8',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#00add8'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { display: true },
+                            suggestedMin: 0,
+                            suggestedMax: 10,
+                            ticks: { display: false } // Hide numbers for cleaner look
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        function initConcurrencyChart() {
+            const ctx = document.getElementById('concurrencyChart').getContext('2d');
+            concurrencyChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 20}, (_, i) => i),
+                    datasets: [{
+                        label: 'Memory (MB)',
+                        data: Array(20).fill(null),
+                        borderColor: '#cbd5e0',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: 100,
+                            title: { display: true, text: 'Memory Usage (MB)' }
+                        },
+                        x: { display: false }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'linear'
+                    }
+                }
+            });
+        }
+
+        // --- Logic: Slice Visualizer ---
+        let slice = [];
+        let capacity = 0;
+        
+        function updateSliceVisual() {
+            const container = document.getElementById('slice-visual-container');
+            const lenSpan = document.getElementById('slice-len');
+            const capSpan = document.getElementById('slice-cap');
+            
+            lenSpan.innerText = slice.length;
+            capSpan.innerText = capacity;
+            
+            container.innerHTML = '';
+            
+            if (capacity === 0) {
+                container.innerHTML = '<span class="text-gray-400 text-sm italic w-full text-center">Slice is empty (nil)</span>';
+                return;
+            }
+
+            for (let i = 0; i < capacity; i++) {
+                const box = document.createElement('div');
+                box.className = 'w-10 h-10 flex items-center justify-center rounded border text-sm font-bold transition-all duration-300 transform scale-100';
+                
+                if (i < slice.length) {
+                    // Active element
+                    box.classList.add('bg-brand-primary', 'text-white', 'border-brand-primary');
+                    box.innerText = slice[i];
+                } else {
+                    // Empty capacity
+                    box.classList.add('bg-gray-100', 'text-gray-300', 'border-gray-200');
+                    box.innerText = '-';
+                }
+                container.appendChild(box);
+            }
+        }
+
+        document.getElementById('btn-append').addEventListener('click', () => {
+            const newVal = Math.floor(Math.random() * 99);
+            
+            // Go Slice growth logic simulation
+            if (slice.length >= capacity) {
+                if (capacity === 0) capacity = 1;
+                else if (capacity < 1024) capacity *= 2;
+                else capacity += capacity / 4; // approximate
+            }
+            
+            slice.push(newVal);
+            updateSliceVisual();
+        });
+
+        document.getElementById('btn-reset-slice').addEventListener('click', () => {
+            slice = [];
+            capacity = 0;
+            updateSliceVisual();
+        });
+
+        // --- Logic: Concurrency Simulation ---
+        function simulateLoad(type) {
+            const data = [];
+            let currentMem = 10; // Base memory
+            
+            for(let i=0; i<20; i++) {
+                if (i > 5 && i < 15) {
+                    // Load phase
+                    if (type === 'java') {
+                        // Threads are heavy stack (approx 1MB each)
+                        currentMem += Math.random() * 20 + 10; 
+                    } else {
+                        // Goroutines are light (2KB initially)
+                        currentMem += Math.random() * 2 + 0.5;
+                    }
+                } else if (i >= 15) {
+                    // GC / Release phase
+                    currentMem = Math.max(10, currentMem - 5);
+                }
+                data.push(currentMem);
+            }
+
+            concurrencyChartInstance.data.datasets[0] = {
+                label: type === 'java' ? 'Java Threads (Heavy)' : 'Go Goroutines (Light)',
+                data: data,
+                borderColor: type === 'java' ? '#f58219' : '#00add8',
+                backgroundColor: type === 'java' ? 'rgba(245, 130, 25, 0.1)' : 'rgba(0, 173, 216, 0.1)',
+                tension: 0.3,
+                fill: true
+            };
+            concurrencyChartInstance.update();
+        }
+
+        document.getElementById('btn-sim-java').addEventListener('click', () => simulateLoad('java'));
+        document.getElementById('btn-sim-go').addEventListener('click', () => simulateLoad('go'));
+        document.getElementById('btn-sim-reset').addEventListener('click', () => {
+            concurrencyChartInstance.data.datasets[0].data = Array(20).fill(null);
+            concurrencyChartInstance.data.datasets[0].label = 'Memory (MB)';
+            concurrencyChartInstance.data.datasets[0].borderColor = '#cbd5e0';
+            concurrencyChartInstance.update();
+        });
+
+        // --- Logic: Navigation & Code Switcher ---
+        function switchTab(tabId) {
+            // Update UI
+            document.querySelectorAll('nav a, #mobile-nav-select option').forEach(el => {
+                // Reset styling handled by checking ID match
+            });
+
+            // Hide all sections
+            sections.forEach(s => document.getElementById(`section-${s}`).classList.add('hidden'));
+            
+            // Show selected section
+            const target = document.getElementById(`section-${tabId}`);
+            target.classList.remove('hidden');
+
+            // Update Nav State
+            const navLinks = document.getElementById('main-nav').children;
+            for(let link of navLinks) {
+                if(link.dataset.tab === tabId) link.classList.add('nav-active');
+                else link.classList.remove('nav-active');
+            }
+            document.getElementById('mobile-nav-select').value = tabId;
+
+            // Trigger Charts if visible
+            if (tabId === 'overview' && radarChartInstance) radarChartInstance.update();
+            if (tabId === 'concurrency' && concurrencyChartInstance) concurrencyChartInstance.update();
+        }
+
+        function loadSyntax(key) {
+            const data = codeExamples[key];
+            document.getElementById('java-code').innerText = data.java;
+            document.getElementById('go-code').innerText = data.go;
+            document.getElementById('syntax-explanation').innerHTML = `<strong>${data.title}:</strong> ${data.desc}`;
+            
+            // Update buttons state
+            document.querySelectorAll('#syntax-buttons button').forEach(btn => {
+                if(btn.dataset.key === key) btn.classList.add('bg-brand-primary', 'text-white');
+                else btn.classList.remove('bg-brand-primary', 'text-white');
+                if(!btn.classList.contains('bg-brand-primary')) btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+            });
+        }
+
+        function initApp() {
+            // Build Nav
+            const nav = document.getElementById('main-nav');
+            const mobileSelect = document.getElementById('mobile-nav-select');
+            
+            sections.forEach(sec => {
+                // Desktop
+                const a = document.createElement('a');
+                a.innerText = navLabels[sec];
+                a.dataset.tab = sec;
+                a.className = 'cursor-pointer inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition';
+                a.onclick = () => switchTab(sec);
+                nav.appendChild(a);
+
+                // Mobile
+                const opt = document.createElement('option');
+                opt.value = sec;
+                opt.innerText = navLabels[sec];
+                mobileSelect.appendChild(opt);
+            });
+
+            mobileSelect.addEventListener('change', (e) => switchTab(e.target.value));
+
+            // Build Syntax Buttons
+            const btnContainer = document.getElementById('syntax-buttons');
+            Object.keys(codeExamples).forEach(key => {
+                const btn = document.createElement('button');
+                btn.innerText = codeExamples[key].title;
+                btn.dataset.key = key;
+                btn.className = 'w-full text-left px-4 py-2 rounded border border-gray-200 shadow-sm transition';
+                btn.onclick = () => loadSyntax(key);
+                btnContainer.appendChild(btn);
+            });
+
+            // Initialize Charts
+            initRadarChart();
+            initConcurrencyChart();
+
+            // Set Defaults
+            switchTab('overview');
+            loadSyntax('hello');
+        }
+
+        // Run
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
