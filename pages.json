@@ -22,5 +22,17 @@
             "SRE"
         ],
         "color": "indigo"
+    },
+    {
+        "title": "Hugo Learning Page",
+        "filename": "hego-leaning.html",
+        "emoji": "📘",
+        "description": "現代化技術文件解決方案 Hugo + Docsy + GitHub Pages",
+        "tags": [
+            "GitHug Pages",
+            "Hugo",
+            "Docsy"
+        ],
+        "color": "red"
     }
 ]
