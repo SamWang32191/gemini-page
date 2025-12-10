@@ -34,5 +34,17 @@
             "Docsy"
         ],
         "color": "red"
+    },
+    {
+        "title": "VS Code Shortcuts",
+        "filename": "vscode-mac.html",
+        "emoji": "⌨️",
+        "description": "Mac 版 VS Code 常用快捷鍵大全，提升開發效率。",
+        "tags": [
+            "VS Code",
+            "Shortcuts",
+            "Productivity"
+        ],
+        "color": "sky"
     }
 ]
