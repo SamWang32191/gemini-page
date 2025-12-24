@@ -4,5 +4,3 @@
 
 ---
 
-## [~] Track: 優化入口網站首頁與自動化工作流整合
-*連結：[./conductor/tracks/portal_optimization_20251224/](./conductor/tracks/portal_optimization_20251224/)*
