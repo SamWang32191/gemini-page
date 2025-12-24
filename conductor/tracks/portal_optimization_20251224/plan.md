@@ -14,4 +14,4 @@
 - [x] 任務：建立 `git-lab.html` 結構並實作互動式 Git 概念預覽 `d0fffe4`
 - [x] 任務：整合「一鍵複製」功能與語義化標籤檢核 `d0fffe4`
 - [x] 任務：更新 `pages.json` 以包含 Git Lab 入口 `d0fffe4`
-- [ ] 任務：Conductor - 使用者手動驗證 '階段 3: Git 模擬器示範頁' (協議詳見 workflow.md)
+- [x] 任務：Conductor - 使用者手動驗證 '階段 3: Git 模擬器示範頁' ✅ Checkpoint `f1f7b4f`
