@@ -18,7 +18,7 @@
     - 切換 `currentOS` 狀態 (mac/win)。
     - 遍歷所有帶有 `data-` 屬性的元素，更新其內部的 HTML (重新生成 `<kbd>` 標籤)。
     - 更新頁面標題、Navbar 標籤與官方下載連結。
-- [ ] 任務 3：確保搜尋功能相容性。
+- [x] 任務 3：確保搜尋功能相容性。 (29c10a7)
     - 調整搜尋 Script，使其在過濾時能讀取當前顯示的鍵位文字。
 - [ ] Task: Conductor - User Manual Verification '第二階段' (Protocol in workflow.md)
 
