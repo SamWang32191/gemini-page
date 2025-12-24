@@ -13,7 +13,7 @@
 - [x] 任務 1：在導航列右側新增切換按鈕。 (eeb754a)
     - 樣式：使用 Tailwind CSS 建立一個具備「Mac/Windows」狀態切換的按鈕。
     - 加入 ID `osSwitcher` 以供 JS 呼叫。
-- [ ] 任務 2：實作核心 JavaScript 切換邏輯。
+- [x] 任務 2：實作核心 JavaScript 切換邏輯。 (a516f87)
     - 監聽切換按鈕點擊事件。
     - 切換 `currentOS` 狀態 (mac/win)。
     - 遍歷所有帶有 `data-` 屬性的元素，更新其內部的 HTML (重新生成 `<kbd>` 標籤)。
