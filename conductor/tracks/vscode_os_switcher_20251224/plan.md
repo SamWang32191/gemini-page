@@ -10,7 +10,7 @@
 - [x] Task: Conductor - User Manual Verification '第一階段' (Protocol in workflow.md) (6e9ec1c)
 
 ## 第二階段：導航列 UI 與 切換邏輯 (UI & Logic)
-- [ ] 任務 1：在導航列右側新增切換按鈕。
+- [x] 任務 1：在導航列右側新增切換按鈕。 (eeb754a)
     - 樣式：使用 Tailwind CSS 建立一個具備「Mac/Windows」狀態切換的按鈕。
     - 加入 ID `osSwitcher` 以供 JS 呼叫。
 - [ ] 任務 2：實作核心 JavaScript 切換邏輯。
