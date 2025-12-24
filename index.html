@@ -8,12 +8,12 @@
     <meta name="keywords" content="全端開發, Go, Kubernetes, Helm, Linux, DevOps, SRE, 技術學習">
     <meta name="author" content="Gemini Learning Hub">
     <meta name="theme-color" content="#3b5bdb">
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content="Gemini Learning Hub">
     <meta property="og:description" content="全端工程師的現代化技術知識庫與學習平台">
     <meta property="og:type" content="website">
-    
+
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="styles.css">
     <title>Gemini Learning Hub - 技術知識庫</title>
@@ -36,7 +36,7 @@
     <!-- Main Content -->
     <main class="main" id="main-content">
         <div class="main__container">
-            
+
             <!-- Hero Section -->
             <section class="hero" aria-labelledby="hero-title">
                 <h1 id="hero-title" class="hero__title">歡迎來到 Gemini Learning Hub</h1>
@@ -76,13 +76,13 @@
 
         async function loadLearningModules() {
             const container = document.getElementById('learning-modules');
-            
+
             try {
                 const response = await fetch('pages.json');
                 if (!response.ok) throw new Error('Network response was not ok');
-                
+
                 const pages = await response.json();
-                
+
                 pages.forEach(page => {
                     const card = createPageCard(page);
                     container.appendChild(card);
@@ -111,7 +111,7 @@
             link.setAttribute('aria-label', `前往 ${page.title}`);
 
             const colorClass = `card--${page.color}`;
-            
+
             link.innerHTML = `
                 <article class="card card--accent ${colorClass}">
                     <div class="card__header">
@@ -120,9 +120,9 @@
                             <h3 class="card__title">${page.title}</h3>
                             <p class="card__description">${page.description}</p>
                             <div class="tag-group">
-                                ${page.tags.map(tag => 
-                                    `<span class="tag tag--${page.color}">${tag}</span>`
-                                ).join('')}
+                                ${page.tags.map(tag =>
+                `<span class="tag tag--${page.color}">${tag}</span>`
+            ).join('')}
                             </div>
                         </div>
                     </div>

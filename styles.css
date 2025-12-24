@@ -16,31 +16,43 @@
    ========================================================================== */
 :root {
   /* ----- 主色調 (Primary Colors) ----- */
-  --color-primary: hsl(225, 75%, 55%);         /* 主要強調色 - 深藍 */
+  --color-primary: hsl(225, 75%, 55%);
+  /* 主要強調色 - 深藍 */
   --color-primary-light: hsl(225, 75%, 65%);
   --color-primary-dark: hsl(225, 75%, 45%);
   --color-primary-glow: hsla(225, 75%, 55%, 0.35);
 
   /* ----- 輔助色 (Accent Colors) ----- */
-  --color-accent: hsl(260, 70%, 60%);          /* 紫色強調 */
+  --color-accent: hsl(260, 70%, 60%);
+  /* 紫色強調 */
   --color-accent-light: hsl(260, 70%, 75%);
   --color-accent-glow: hsla(260, 70%, 60%, 0.3);
 
-  --color-success: hsl(155, 65%, 45%);         /* 成功 - 翠綠 */
-  --color-warning: hsl(40, 90%, 55%);          /* 警告 - 金黃 */
-  --color-error: hsl(0, 70%, 60%);             /* 錯誤 - 紅 */
-  --color-info: hsl(195, 75%, 50%);            /* 資訊 - 天藍 */
+  --color-success: hsl(155, 65%, 45%);
+  /* 成功 - 翠綠 */
+  --color-warning: hsl(40, 90%, 55%);
+  /* 警告 - 金黃 */
+  --color-error: hsl(0, 70%, 60%);
+  /* 錯誤 - 紅 */
+  --color-info: hsl(195, 75%, 50%);
+  /* 資訊 - 天藍 */
 
   /* ----- 中性色 (Neutral Colors) ----- */
-  --color-background: hsl(220, 20%, 97%);      /* 頁面背景 */
-  --color-surface: hsl(0, 0%, 100%);           /* 卡片表面 */
+  --color-background: hsl(220, 20%, 97%);
+  /* 頁面背景 */
+  --color-surface: hsl(0, 0%, 100%);
+  /* 卡片表面 */
   --color-surface-elevated: hsl(220, 15%, 99%);
-  
-  --color-text-primary: hsl(220, 25%, 20%);    /* 主要文字 */
-  --color-text-secondary: hsl(220, 15%, 45%);  /* 次要文字 */
-  --color-text-muted: hsl(220, 10%, 60%);      /* 低調文字 */
-  --color-text-inverse: hsl(0, 0%, 100%);      /* 反相文字 */
-  
+
+  --color-text-primary: hsl(220, 25%, 20%);
+  /* 主要文字 */
+  --color-text-secondary: hsl(220, 15%, 45%);
+  /* 次要文字 */
+  --color-text-muted: hsl(220, 10%, 60%);
+  /* 低調文字 */
+  --color-text-inverse: hsl(0, 0%, 100%);
+  /* 反相文字 */
+
   --color-border: hsl(220, 15%, 88%);
   --color-border-light: hsl(220, 15%, 93%);
   --color-divider: hsl(220, 15%, 92%);
@@ -54,60 +66,83 @@
   /* ----- 陰影 (Shadows) ----- */
   --shadow-xs: 0 1px 2px hsla(220, 30%, 20%, 0.04);
   --shadow-sm: 0 2px 4px hsla(220, 30%, 20%, 0.06);
-  --shadow-md: 0 4px 8px hsla(220, 30%, 20%, 0.08), 
-               0 2px 4px hsla(220, 30%, 20%, 0.04);
-  --shadow-lg: 0 8px 24px hsla(220, 30%, 20%, 0.1), 
-               0 4px 8px hsla(220, 30%, 20%, 0.06);
-  --shadow-xl: 0 16px 48px hsla(220, 30%, 20%, 0.12), 
-               0 8px 16px hsla(220, 30%, 20%, 0.08);
+  --shadow-md: 0 4px 8px hsla(220, 30%, 20%, 0.08),
+    0 2px 4px hsla(220, 30%, 20%, 0.04);
+  --shadow-lg: 0 8px 24px hsla(220, 30%, 20%, 0.1),
+    0 4px 8px hsla(220, 30%, 20%, 0.06);
+  --shadow-xl: 0 16px 48px hsla(220, 30%, 20%, 0.12),
+    0 8px 16px hsla(220, 30%, 20%, 0.08);
   --shadow-glow: 0 0 20px var(--color-primary-glow);
-  --shadow-card-hover: 0 20px 40px hsla(220, 30%, 20%, 0.15), 
-                       0 8px 16px hsla(220, 30%, 20%, 0.1);
+  --shadow-card-hover: 0 20px 40px hsla(220, 30%, 20%, 0.15),
+    0 8px 16px hsla(220, 30%, 20%, 0.1);
 
   /* ----- 字體 (Typography) ----- */
   --font-sans: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
-  
-  --font-size-xs: 0.75rem;      /* 12px */
-  --font-size-sm: 0.875rem;     /* 14px */
-  --font-size-base: 1rem;       /* 16px */
-  --font-size-lg: 1.125rem;     /* 18px */
-  --font-size-xl: 1.25rem;      /* 20px */
-  --font-size-2xl: 1.5rem;      /* 24px */
-  --font-size-3xl: 1.875rem;    /* 30px */
-  --font-size-4xl: 2.25rem;     /* 36px */
-  
+
+  --font-size-xs: 0.75rem;
+  /* 12px */
+  --font-size-sm: 0.875rem;
+  /* 14px */
+  --font-size-base: 1rem;
+  /* 16px */
+  --font-size-lg: 1.125rem;
+  /* 18px */
+  --font-size-xl: 1.25rem;
+  /* 20px */
+  --font-size-2xl: 1.5rem;
+  /* 24px */
+  --font-size-3xl: 1.875rem;
+  /* 30px */
+  --font-size-4xl: 2.25rem;
+  /* 36px */
+
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
-  
+
   --letter-spacing-tight: -0.02em;
   --letter-spacing-normal: 0;
   --letter-spacing-wide: 0.02em;
 
   /* ----- 間距 (Spacing) ----- */
-  --space-1: 0.25rem;    /* 4px */
-  --space-2: 0.5rem;     /* 8px */
-  --space-3: 0.75rem;    /* 12px */
-  --space-4: 1rem;       /* 16px */
-  --space-5: 1.25rem;    /* 20px */
-  --space-6: 1.5rem;     /* 24px */
-  --space-8: 2rem;       /* 32px */
-  --space-10: 2.5rem;    /* 40px */
-  --space-12: 3rem;      /* 48px */
-  --space-16: 4rem;      /* 64px */
+  --space-1: 0.25rem;
+  /* 4px */
+  --space-2: 0.5rem;
+  /* 8px */
+  --space-3: 0.75rem;
+  /* 12px */
+  --space-4: 1rem;
+  /* 16px */
+  --space-5: 1.25rem;
+  /* 20px */
+  --space-6: 1.5rem;
+  /* 24px */
+  --space-8: 2rem;
+  /* 32px */
+  --space-10: 2.5rem;
+  /* 40px */
+  --space-12: 3rem;
+  /* 48px */
+  --space-16: 4rem;
+  /* 64px */
 
   /* ----- 圓角 (Border Radius) ----- */
-  --radius-sm: 0.375rem;   /* 6px */
-  --radius-md: 0.5rem;     /* 8px */
-  --radius-lg: 0.75rem;    /* 12px */
-  --radius-xl: 1rem;       /* 16px */
-  --radius-2xl: 1.5rem;    /* 24px */
+  --radius-sm: 0.375rem;
+  /* 6px */
+  --radius-md: 0.5rem;
+  /* 8px */
+  --radius-lg: 0.75rem;
+  /* 12px */
+  --radius-xl: 1rem;
+  /* 16px */
+  --radius-2xl: 1.5rem;
+  /* 24px */
   --radius-full: 9999px;
 
   /* ----- 動畫 (Animations) ----- */
@@ -115,7 +150,7 @@
   --transition-base: 250ms ease;
   --transition-slow: 400ms ease;
   --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  
+
   /* ----- 佈局 (Layout) ----- */
   --container-max: 1280px;
   --header-height: 4rem;
@@ -179,19 +214,41 @@ body {
 /* ==========================================================================
    3. 排版 (Typography)
    ========================================================================== */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
   color: var(--color-text-primary);
 }
 
-h1 { font-size: var(--font-size-4xl); }
-h2 { font-size: var(--font-size-3xl); }
-h3 { font-size: var(--font-size-2xl); }
-h4 { font-size: var(--font-size-xl); }
-h5 { font-size: var(--font-size-lg); }
-h6 { font-size: var(--font-size-base); }
+h1 {
+  font-size: var(--font-size-4xl);
+}
+
+h2 {
+  font-size: var(--font-size-3xl);
+}
+
+h3 {
+  font-size: var(--font-size-2xl);
+}
+
+h4 {
+  font-size: var(--font-size-xl);
+}
+
+h5 {
+  font-size: var(--font-size-lg);
+}
+
+h6 {
+  font-size: var(--font-size-base);
+}
 
 p {
   margin-bottom: var(--space-4);
@@ -208,7 +265,8 @@ a:hover {
   color: var(--color-primary-dark);
 }
 
-code, pre {
+code,
+pre {
   font-family: var(--font-mono);
   font-size: 0.9em;
 }
@@ -245,11 +303,15 @@ pre code {
 }
 
 @media (min-width: 640px) {
-  .container { padding-inline: var(--space-6); }
+  .container {
+    padding-inline: var(--space-6);
+  }
 }
 
 @media (min-width: 1024px) {
-  .container { padding-inline: var(--space-8); }
+  .container {
+    padding-inline: var(--space-8);
+  }
 }
 
 /* Grid 系統 */
@@ -258,18 +320,36 @@ pre code {
   gap: var(--space-6);
 }
 
-.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
-.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
 
 @media (min-width: 640px) {
-  .sm\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 1024px) {
-  .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-  .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* ==========================================================================
@@ -283,9 +363,9 @@ pre code {
   padding: var(--space-6);
   position: relative;
   overflow: hidden;
-  transition: transform var(--transition-base), 
-              box-shadow var(--transition-base),
-              border-color var(--transition-base);
+  transition: transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
 }
 
 .card::before {
@@ -314,14 +394,37 @@ pre code {
   border-radius: var(--radius-sm) var(--radius-xl) var(--radius-xl) var(--radius-sm);
 }
 
-.card--accent.card--blue { border-left-color: hsl(210, 80%, 55%); }
-.card--accent.card--indigo { border-left-color: hsl(245, 70%, 60%); }
-.card--accent.card--red { border-left-color: hsl(0, 75%, 60%); }
-.card--accent.card--sky { border-left-color: hsl(195, 85%, 50%); }
-.card--accent.card--emerald { border-left-color: hsl(155, 65%, 45%); }
-.card--accent.card--slate { border-left-color: hsl(215, 20%, 50%); }
-.card--accent.card--amber { border-left-color: hsl(40, 90%, 50%); }
-.card--accent.card--purple { border-left-color: hsl(270, 70%, 60%); }
+.card--accent.card--blue {
+  border-left-color: hsl(210, 80%, 55%);
+}
+
+.card--accent.card--indigo {
+  border-left-color: hsl(245, 70%, 60%);
+}
+
+.card--accent.card--red {
+  border-left-color: hsl(0, 75%, 60%);
+}
+
+.card--accent.card--sky {
+  border-left-color: hsl(195, 85%, 50%);
+}
+
+.card--accent.card--emerald {
+  border-left-color: hsl(155, 65%, 45%);
+}
+
+.card--accent.card--slate {
+  border-left-color: hsl(215, 20%, 50%);
+}
+
+.card--accent.card--amber {
+  border-left-color: hsl(40, 90%, 50%);
+}
+
+.card--accent.card--purple {
+  border-left-color: hsl(270, 70%, 60%);
+}
 
 /* 卡片頭部 */
 .card__header {
@@ -375,8 +478,8 @@ pre code {
   border-radius: var(--radius-md);
   background-color: hsla(225, 50%, 50%, 0.1);
   color: var(--color-primary);
-  transition: background-color var(--transition-fast), 
-              transform var(--transition-fast);
+  transition: background-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .tag:hover {
@@ -450,11 +553,15 @@ pre code {
 }
 
 @media (min-width: 640px) {
-  .navbar__container { padding-inline: var(--space-6); }
+  .navbar__container {
+    padding-inline: var(--space-6);
+  }
 }
 
 @media (min-width: 1024px) {
-  .navbar__container { padding-inline: var(--space-8); }
+  .navbar__container {
+    padding-inline: var(--space-8);
+  }
 }
 
 .navbar__brand {
@@ -555,7 +662,9 @@ pre code {
 }
 
 @media (min-width: 640px) {
-  .main { padding: var(--space-8); }
+  .main {
+    padding: var(--space-8);
+  }
 }
 
 .main__container {
@@ -569,33 +678,69 @@ pre code {
 
 /* 淡入 */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fadeIn {
   animation: fadeIn var(--transition-slow) ease-out forwards;
 }
 
-/* 交錯淡入 */
-.stagger-fade > * {
-  opacity: 0;
-  animation: fadeIn var(--transition-slow) ease-out forwards;
+/* 交錯淡入 - 適用於動態插入的內容 */
+.stagger-fade>.link-block {
+  animation: fadeIn var(--transition-slow) ease-out both;
 }
 
-.stagger-fade > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-fade > *:nth-child(2) { animation-delay: 75ms; }
-.stagger-fade > *:nth-child(3) { animation-delay: 150ms; }
-.stagger-fade > *:nth-child(4) { animation-delay: 225ms; }
-.stagger-fade > *:nth-child(5) { animation-delay: 300ms; }
-.stagger-fade > *:nth-child(6) { animation-delay: 375ms; }
-.stagger-fade > *:nth-child(7) { animation-delay: 450ms; }
-.stagger-fade > *:nth-child(8) { animation-delay: 525ms; }
+.stagger-fade>.link-block:nth-child(1) {
+  animation-delay: 50ms;
+}
+
+.stagger-fade>.link-block:nth-child(2) {
+  animation-delay: 125ms;
+}
+
+.stagger-fade>.link-block:nth-child(3) {
+  animation-delay: 200ms;
+}
+
+.stagger-fade>.link-block:nth-child(4) {
+  animation-delay: 275ms;
+}
+
+.stagger-fade>.link-block:nth-child(5) {
+  animation-delay: 350ms;
+}
+
+.stagger-fade>.link-block:nth-child(6) {
+  animation-delay: 425ms;
+}
+
+.stagger-fade>.link-block:nth-child(7) {
+  animation-delay: 500ms;
+}
+
+.stagger-fade>.link-block:nth-child(8) {
+  animation-delay: 575ms;
+}
 
 /* 發光脈衝 */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 var(--color-primary-glow); }
-  50% { box-shadow: 0 0 20px 8px var(--color-primary-glow); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--color-primary-glow);
+  }
+
+  50% {
+    box-shadow: 0 0 20px 8px var(--color-primary-glow);
+  }
 }
 
 .animate-pulse-glow {
@@ -616,9 +761,17 @@ pre code {
 /* ==========================================================================
    12. 輔助類別 (Utility Classes)
    ========================================================================== */
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
 
 .visually-hidden {
   position: absolute;
