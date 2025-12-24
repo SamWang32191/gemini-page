@@ -7,7 +7,7 @@
     - 預設將目前的 Mac 鍵位填入 `data-mac`。
     - 根據官方 PDF 填入對應的 Windows 鍵位至 `data-win`。
 - [x] 任務 3：清理原有的靜態 `<kbd>` 標籤，準備由 JS 動態生成。 (293608c)
-- [ ] Task: Conductor - User Manual Verification '第一階段' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification '第一階段' (Protocol in workflow.md) (6e9ec1c)
 
 ## 第二階段：導航列 UI 與 切換邏輯 (UI & Logic)
 - [ ] 任務 1：在導航列右側新增切換按鈕。
