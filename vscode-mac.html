@@ -96,21 +96,21 @@
                                 d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </a>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg"
-                            alt="VS Code" class="w-6 h-6">
-                        <span class="text-xl font-bold tracking-wider">VS Code Shortcuts</span>
+                            alt="VS Code" class="w-6 h-6 flex-shrink-0">
+                        <span class="text-lg md:text-xl font-bold tracking-wider truncate">VS Code Shortcuts</span>
                     </div>
-                    <span id="editionLabel" class="text-xs bg-sky-500 px-2 py-0.5 rounded-full ml-2">Mac Edition</span>
+                    <span id="editionLabel" class="text-[10px] md:text-xs bg-sky-500 px-2 py-0.5 rounded-full ml-1 md:ml-2 whitespace-nowrap">Mac Edition</span>
                 </div>
 
                 <!-- OS Switcher Button -->
-                <div class="flex items-center">
+                <div class="flex items-center ml-2">
                     <button id="osSwitcher"
-                        class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-4 py-1.5 rounded-lg border border-slate-600 transition-all group">
+                        class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-2 md:px-4 py-1.5 rounded-lg border border-slate-600 transition-all group">
                         <div class="flex items-center gap-1.5">
-                            <i data-lucide="monitor" class="w-4 h-4 text-slate-400 group-hover:text-sky-400"></i>
-                            <span class="text-sm font-medium">切換至 Windows</span>
+                            <i data-lucide="monitor" class="w-4 h-4 text-slate-400 group-hover:text-sky-400 flex-shrink-0"></i>
+                            <span class="text-xs md:text-sm font-medium whitespace-nowrap">切換至 Windows</span>
                         </div>
                     </button>
                 </div>
