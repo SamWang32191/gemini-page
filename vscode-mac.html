@@ -51,6 +51,10 @@
             animation: fadeIn 0.3s ease-out forwards;
         }
 
+        .animate-key-pop {
+            animation: keyPop 0.2s ease-out forwards;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -60,6 +64,17 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        @keyframes keyPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
             }
         }
     </style>
@@ -480,8 +495,11 @@
                 const container = row.querySelector('.keybinding-container');
                 const keyData = currentOS === 'mac' ? row.getAttribute('data-mac') : row.getAttribute('data-win');
                 
-                // Clear container
+                // Clear container and add animation
                 container.innerHTML = '';
+                container.classList.remove('animate-key-pop');
+                void container.offsetWidth; // Force reflow
+                container.classList.add('animate-key-pop');
                 
                 // Parse keyData and create kbd elements
                 // Splitting logic: handles spaces for chords (Cmd K Cmd S) and ignores slashes for toggle rows
