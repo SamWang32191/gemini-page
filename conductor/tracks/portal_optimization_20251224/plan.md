@@ -3,7 +3,7 @@
 ## 階段 1: 基礎視覺與架構 (Phase 1: Base Visuals & Architecture)
 - [x] 任務：分析並建立全域 CSS 設計系統 (變數、顏色、字體) `f4d6115`
 - [x] 任務：重構 `index.html` 基礎結構，導入卡片容器佈局 `6ee3f1f`
-- [ ] 任務：Conductor - 使用者手動驗證 '階段 1: 基礎視覺與架構' (協議詳見 workflow.md)
+- [x] 任務：Conductor - 使用者手動驗證 '階段 1: 基礎視覺與架構' ✅ Checkpoint `3d5111b`
 
 ## 階段 2: 首頁動態內容 (Phase 2: Homepage Dynamic Content)
 - [ ] 任務：撰寫 JavaScript 讓首頁動態讀取並渲染 `pages.json` 卡片
