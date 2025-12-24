@@ -59,5 +59,18 @@
             "Permissions"
         ],
         "color": "emerald"
+    },
+    {
+        "title": "Linux Permissions Guide",
+        "filename": "linux-permissions-leaning.html",
+        "emoji": "🐧",
+        "description": "深入理解 Linux 權限系統。透過互動式模擬器掌握 chmod (4-2-1) 與 chown 的核心邏輯與實戰技巧。",
+        "tags": [
+            "Linux",
+            "Permissions",
+            "chmod",
+            "chown"
+        ],
+        "color": "slate"
     }
 ]

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux 權限指令互動指南：chmod 與 chown 深度解析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        /* Chart Container Styles - Responsive & Constrained */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Toggles */
+        .perm-toggle {
+            transition: all 0.2s ease;
+        }
+
+        .perm-toggle:checked+div {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        /* Code block styling */
+        .code-snippet {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+        }
+
+        .active-tab {
+            border-bottom: 2px solid #3b82f6;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .inactive-tab {
+            color: #64748b;
+        }
+
+        .inactive-tab:hover {
+            color: #334155;
+        }
+    </style>
+    <!-- Chosen Palette: Slate (Neutrals) + Blue (Primary Action) + Emerald (Success) + Amber (Warning) -->
+    <!-- Application Structure Plan: 
+         1. Header: Clear title and purpose.
+         2. Interactive Simulator (Hero Section): The core "Wow" factor. Users can toggle bits (r/w/x) for U/G/O and see the numeric code (755) and symbolic string (-rwxr-xr-x) update in real-time. Includes a visual chart showing "Access Level".
+         3. The Logic (4-2-1): Detailed breakdown of the octal system using an interactive table where users can filter combinations.
+         4. Command Deep Dive: Tabbed interface for 'chmod' vs 'chown', explaining syntax with dynamic examples based on the simulator's state.
+         5. Common Scenarios: A "Best Practice" section showing standard permissions for web servers, private keys, etc.
+         Rationale: Permission concepts are abstract. Starting with a visual simulator grounds the user before diving into the theory.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Simulator Radar/Bar Chart: Goal -> Visualize the "shape" of security. Method -> Chart.js Bar Chart. Justification -> Shows relative power of User vs Group vs Others immediately.
+         2. Bitwise Toggles: Goal -> Teach the 4+2+1 math. Method -> HTML/JS Checkboxes. Justification -> Direct manipulation learning.
+         3. Dynamic Command Builder: Goal -> Syntax mastery. Method -> JS Text Updates. Justification -> Users copy-paste specific commands; seeing them build dynamically aids memory.
+         4. NO SVG/Mermaid confirmed. Using standard HTML/CSS and Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-slate-800">🐧 Linux 權限大師</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="navTo('simulator')"
+                        class="nav-btn active-tab px-3 py-2 text-sm font-medium transition-colors"
+                        id="nav-simulator">互動模擬器</button>
+                    <button onclick="navTo('logic')"
+                        class="nav-btn inactive-tab px-3 py-2 text-sm font-medium transition-colors"
+                        id="nav-logic">4-2-1 原理</button>
+                    <button onclick="navTo('commands')"
+                        class="nav-btn inactive-tab px-3 py-2 text-sm font-medium transition-colors"
+                        id="nav-commands">指令詳解</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-12">
+
+        <!-- INTRO -->
+        <section class="text-center max-w-3xl mx-auto">
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">掌握 chmod 與 chown</h1>
+            <p class="text-lg text-slate-600">
+                Linux 檔案系統的安全核心在於權限控制。透過本互動指南，您將深入理解
+                <span class="font-mono bg-slate-200 px-1 rounded text-sm">rwx</span> (4-2-1) 數值組合、
+                <span class="font-mono bg-slate-200 px-1 rounded text-sm">chmod</span> 授權邏輯，以及
+                <span class="font-mono bg-slate-200 px-1 rounded text-sm">chown</span> 擁有權管理。
+            </p>
+        </section>
+
+        <!-- SECTION 1: INTERACTIVE SIMULATOR -->
+        <section id="simulator" class="scroll-mt-24">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+                <div class="p-6 border-b border-slate-100 bg-slate-50">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        🎛️ 權限模擬器 (Permission Calculator)
+                    </h2>
+                    <p class="text-slate-600 mt-2">
+                        點擊下方的按鈕來切換讀 (Read)、寫 (Write)、執行 (Execute) 權限。觀察數值與指令如何即時變化。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+                    <!-- Controls -->
+                    <div class="space-y-8">
+                        <!-- User (Owner) -->
+                        <div class="bg-blue-50 rounded-xl p-5 border border-blue-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-blue-800 text-lg">擁有者 (User/Owner)</h3>
+                                <span id="val-u" class="text-2xl font-mono font-bold text-blue-600">7</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="u" data-val="4"
+                                        checked onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-blue-200 rounded-lg text-blue-900 font-medium group-hover:border-blue-400">
+                                        <div>Read</div>
+                                        <div class="text-xs opacity-75">4</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="u" data-val="2"
+                                        checked onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-blue-200 rounded-lg text-blue-900 font-medium group-hover:border-blue-400">
+                                        <div>Write</div>
+                                        <div class="text-xs opacity-75">2</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="u" data-val="1"
+                                        checked onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-blue-200 rounded-lg text-blue-900 font-medium group-hover:border-blue-400">
+                                        <div>Execute</div>
+                                        <div class="text-xs opacity-75">1</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Group -->
+                        <div class="bg-emerald-50 rounded-xl p-5 border border-emerald-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-emerald-800 text-lg">群組 (Group)</h3>
+                                <span id="val-g" class="text-2xl font-mono font-bold text-emerald-600">5</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="g" data-val="4"
+                                        checked onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-emerald-200 rounded-lg text-emerald-900 font-medium group-hover:border-emerald-400">
+                                        <div>Read</div>
+                                        <div class="text-xs opacity-75">4</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="g" data-val="2"
+                                        onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-emerald-200 rounded-lg text-emerald-900 font-medium group-hover:border-emerald-400">
+                                        <div>Write</div>
+                                        <div class="text-xs opacity-75">2</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="g" data-val="1"
+                                        checked onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-emerald-200 rounded-lg text-emerald-900 font-medium group-hover:border-emerald-400">
+                                        <div>Execute</div>
+                                        <div class="text-xs opacity-75">1</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Others -->
+                        <div class="bg-amber-50 rounded-xl p-5 border border-amber-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-amber-800 text-lg">其他人 (Others)</h3>
+                                <span id="val-o" class="text-2xl font-mono font-bold text-amber-600">5</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="o" data-val="4"
+                                        checked onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-amber-200 rounded-lg text-amber-900 font-medium group-hover:border-amber-400">
+                                        <div>Read</div>
+                                        <div class="text-xs opacity-75">4</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="o" data-val="2"
+                                        onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-amber-200 rounded-lg text-amber-900 font-medium group-hover:border-amber-400">
+                                        <div>Write</div>
+                                        <div class="text-xs opacity-75">2</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer group">
+                                    <input type="checkbox" class="perm-toggle hidden" data-target="o" data-val="1"
+                                        checked onchange="updateState()">
+                                    <div
+                                        class="text-center py-3 border-2 border-amber-200 rounded-lg text-amber-900 font-medium group-hover:border-amber-400">
+                                        <div>Execute</div>
+                                        <div class="text-xs opacity-75">1</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Output & Visualization -->
+                    <div class="flex flex-col space-y-6">
+                        <!-- Result Card -->
+                        <div class="bg-slate-900 text-white rounded-xl p-6 shadow-lg">
+                            <div class="text-sm text-slate-400 mb-2 uppercase tracking-wider font-bold">Generated
+                                Command</div>
+                            <div class="text-3xl font-mono text-green-400 mb-4 break-all">
+                                chmod <span id="res-numeric">755</span> filename
+                            </div>
+                            <div class="border-t border-slate-700 pt-4 flex justify-between items-center">
+                                <div>
+                                    <div class="text-xs text-slate-400">Symbolic Mode</div>
+                                    <div class="font-mono text-lg tracking-widest text-yellow-300" id="res-symbolic">
+                                        -rwxr-xr-x</div>
+                                </div>
+                                <button onclick="copyCommand()"
+                                    class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-1 rounded transition-colors">
+                                    複製
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chart Container -->
+                        <div
+                            class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex-grow flex flex-col justify-center">
+                            <h4 class="text-sm font-bold text-slate-500 mb-2 text-center uppercase">權限強度分析 (Access
+                                Level)</h4>
+                            <div class="chart-container">
+                                <canvas id="permChart"></canvas>
+                            </div>
+                            <p class="text-xs text-slate-400 text-center mt-2">
+                                高度代表該身份對檔案的控制能力 (0-7)
+                            </p>
+                        </div>
+
+                        <!-- Human Readable Summary -->
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r">
+                            <p id="human-summary" class="text-sm text-blue-900">
+                                <strong>解讀：</strong> 擁有者可以完全控制，群組可以讀取和執行，其他人可以讀取和執行。這通常用於網頁伺服器上的資料夾。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: THE 4-2-1 LOGIC -->
+        <section id="logic" class="scroll-mt-24">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-slate-800 mb-3">🔢 4-2-1 數值組合原理</h2>
+                <p class="text-lg text-slate-600">
+                    Linux 權限使用二進位標誌（Binary Flags）來計算。每個權限都有一個特定的數值，將它們相加即得到最終權限。
+                    請查看下表了解每一個數字代表的具體含義。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Explanation -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold mb-4 border-b pb-2">基礎數值</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-center">
+                            <span
+                                class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xl mr-4">4</span>
+                            <div>
+                                <span class="block font-bold text-slate-800">Read (r) - 讀取</span>
+                                <span class="text-sm text-slate-500">讀取檔案內容或查看目錄列表。</span>
+                            </div>
+                        </li>
+                        <li class="flex items-center">
+                            <span
+                                class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-xl mr-4">2</span>
+                            <div>
+                                <span class="block font-bold text-slate-800">Write (w) - 寫入</span>
+                                <span class="text-sm text-slate-500">修改檔案內容或是於目錄中建立/刪除檔案。</span>
+                            </div>
+                        </li>
+                        <li class="flex items-center">
+                            <span
+                                class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xl mr-4">1</span>
+                            <div>
+                                <span class="block font-bold text-slate-800">Execute (x) - 執行</span>
+                                <span class="text-sm text-slate-500">將檔案作為程式執行或進入目錄(cd)。</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Reference Table -->
+                <div class="overflow-hidden rounded-xl shadow-sm border border-slate-200">
+                    <table class="min-w-full bg-white text-sm">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="py-3 px-4 text-left font-bold text-slate-700">數值</th>
+                                <th class="py-3 px-4 text-left font-bold text-slate-700">符號</th>
+                                <th class="py-3 px-4 text-left font-bold text-slate-700">權限說明</th>
+                                <th class="py-3 px-4 text-left font-bold text-slate-700">常見用途</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50 transition-colors cursor-default">
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600">0</td>
+                                <td class="py-3 px-4 font-mono text-slate-500">---</td>
+                                <td class="py-3 px-4">無權限</td>
+                                <td class="py-3 px-4 text-slate-500">完全封鎖</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors cursor-default">
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600">1</td>
+                                <td class="py-3 px-4 font-mono text-slate-500">--x</td>
+                                <td class="py-3 px-4">僅執行</td>
+                                <td class="py-3 px-4 text-slate-500">進入目錄但不列表</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors cursor-default">
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600">2</td>
+                                <td class="py-3 px-4 font-mono text-slate-500">-w-</td>
+                                <td class="py-3 px-4">僅寫入</td>
+                                <td class="py-3 px-4 text-slate-500">罕見 (只能寫不能讀)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors cursor-default">
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600">3</td>
+                                <td class="py-3 px-4 font-mono text-slate-500">-wx</td>
+                                <td class="py-3 px-4">寫入 + 執行</td>
+                                <td class="py-3 px-4 text-slate-500">特殊目錄權限</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors cursor-default">
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600">4</td>
+                                <td class="py-3 px-4 font-mono text-slate-500">r--</td>
+                                <td class="py-3 px-4">僅讀取</td>
+                                <td class="py-3 px-4 text-slate-500">唯讀檔案/設定檔</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors cursor-default">
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600">5</td>
+                                <td class="py-3 px-4 font-mono text-slate-500">r-x</td>
+                                <td class="py-3 px-4">讀取 + 執行</td>
+                                <td class="py-3 px-4 text-slate-500">公開的執行檔/目錄</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors cursor-default">
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600">6</td>
+                                <td class="py-3 px-4 font-mono text-slate-500">rw-</td>
+                                <td class="py-3 px-4">讀取 + 寫入</td>
+                                <td class="py-3 px-4 text-slate-500">一般文字檔案</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors cursor-default bg-yellow-50">
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600">7</td>
+                                <td class="py-3 px-4 font-mono text-slate-500">rwx</td>
+                                <td class="py-3 px-4 font-bold">完全控制</td>
+                                <td class="py-3 px-4 text-slate-500">腳本、程式擁有者</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: COMMAND DEEP DIVE (CHMOD & CHOWN) -->
+        <section id="commands" class="scroll-mt-24">
+            <h2 class="text-3xl font-bold text-slate-800 mb-6">🛠️ 指令深度解析</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                <!-- CHMOD Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="bg-slate-800 p-4 text-white flex justify-between items-center">
+                        <h3 class="text-xl font-mono font-bold">chmod</h3>
+                        <span class="text-xs bg-slate-600 px-2 py-1 rounded">Change Mode</span>
+                    </div>
+                    <div class="p-6 flex-grow">
+                        <p class="text-slate-600 mb-4">
+                            用於改變檔案或目錄的存取權限。可以使用「數字法」或「符號法」。
+                        </p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1">基本語法</h4>
+                                <div class="code-snippet">chmod [options] mode file...</div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1">常見範例 (點擊複製)</h4>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="cursor-pointer hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all"
+                                        onclick="copyText('chmod 755 index.html')">
+                                        <div class="font-mono text-blue-600 font-bold">chmod 755 index.html</div>
+                                        <div class="text-slate-500">標準網頁權限 (User全開, 其它唯讀/執行)</div>
+                                    </li>
+                                    <li class="cursor-pointer hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all"
+                                        onclick="copyText('chmod 600 config.yaml')">
+                                        <div class="font-mono text-blue-600 font-bold">chmod 600 config.yaml</div>
+                                        <div class="text-slate-500">高隱私檔案 (僅擁有者可讀寫)</div>
+                                    </li>
+                                    <li class="cursor-pointer hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all"
+                                        onclick="copyText('chmod +x script.sh')">
+                                        <div class="font-mono text-blue-600 font-bold">chmod +x script.sh</div>
+                                        <div class="text-slate-500">符號法：快速增加執行權限</div>
+                                    </li>
+                                    <li class="cursor-pointer hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all"
+                                        onclick="copyText('chmod -R 755 /var/www')">
+                                        <div class="font-mono text-blue-600 font-bold">chmod -R 755 /folder</div>
+                                        <div class="text-slate-500"><span
+                                                class="bg-yellow-100 text-yellow-800 px-1 rounded">-R</span>
+                                            遞迴修改資料夾內所有內容</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHOWN Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="bg-slate-800 p-4 text-white flex justify-between items-center">
+                        <h3 class="text-xl font-mono font-bold">chown</h3>
+                        <span class="text-xs bg-slate-600 px-2 py-1 rounded">Change Owner</span>
+                    </div>
+                    <div class="p-6 flex-grow">
+                        <p class="text-slate-600 mb-4">
+                            用於改變檔案或目錄的「擁有者」與「所屬群組」。通常需要 <span class="font-mono bg-slate-100 px-1">sudo</span> 權限。
+                        </p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1">基本語法</h4>
+                                <div class="code-snippet">chown [options] user[:group] file...</div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm mb-1">常見範例 (點擊複製)</h4>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="cursor-pointer hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all"
+                                        onclick="copyText('chown john file.txt')">
+                                        <div class="font-mono text-emerald-600 font-bold">chown john file.txt</div>
+                                        <div class="text-slate-500">僅更改擁有者為 john</div>
+                                    </li>
+                                    <li class="cursor-pointer hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all"
+                                        onclick="copyText('chown john:devs file.txt')">
+                                        <div class="font-mono text-emerald-600 font-bold">chown john:devs file.txt</div>
+                                        <div class="text-slate-500">同時更改擁有者(john)與群組(devs)</div>
+                                    </li>
+                                    <li class="cursor-pointer hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all"
+                                        onclick="copyText('chown :admins file.txt')">
+                                        <div class="font-mono text-emerald-600 font-bold">chown :admins file.txt</div>
+                                        <div class="text-slate-500">僅更改群組為 admins</div>
+                                    </li>
+                                    <li class="cursor-pointer hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all"
+                                        onclick="copyText('chown -R www-data:www-data /var/www/html')">
+                                        <div class="font-mono text-emerald-600 font-bold">chown -R user:group folder
+                                        </div>
+                                        <div class="text-slate-500"><span
+                                                class="bg-yellow-100 text-yellow-800 px-1 rounded">-R</span> 遞迴更改所有子項目
+                                            (常見於網站佈署)</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 4: INTERACTIVE QUIZ/SCENARIO -->
+        <section class="bg-slate-800 rounded-2xl p-8 text-center text-white mb-12">
+            <h2 class="text-2xl font-bold mb-4">💡 實戰測試</h2>
+            <p class="mb-6 text-slate-300">請嘗試在上方模擬器中設定出以下情境的權限：</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                <div class="bg-slate-700 p-4 rounded hover:bg-slate-600 transition cursor-pointer"
+                    onclick="setScenario(7,0,0)">
+                    <h4 class="font-bold text-yellow-400 mb-2">SSH 私鑰 (id_rsa)</h4>
+                    <p class="text-xs text-slate-300">只有擁有者可以讀寫，其他人完全禁止。</p>
+                    <div class="mt-2 text-right text-xs text-slate-400 font-mono">點擊設定 -> 700</div>
+                </div>
+                <div class="bg-slate-700 p-4 rounded hover:bg-slate-600 transition cursor-pointer"
+                    onclick="setScenario(7,5,5)">
+                    <h4 class="font-bold text-green-400 mb-2">網站目錄 (/var/www)</h4>
+                    <p class="text-xs text-slate-300">擁有者全權管理，其他人只能讀取和進入瀏覽。</p>
+                    <div class="mt-2 text-right text-xs text-slate-400 font-mono">點擊設定 -> 755</div>
+                </div>
+                <div class="bg-slate-700 p-4 rounded hover:bg-slate-600 transition cursor-pointer"
+                    onclick="setScenario(7,7,7)">
+                    <h4 class="font-bold text-red-400 mb-2">危險全開 (Do Not Use)</h4>
+                    <p class="text-xs text-slate-300">所有人都可讀寫執行。通常僅用於除錯，極不安全。</p>
+                    <div class="mt-2 text-right text-xs text-slate-400 font-mono">點擊設定 -> 777</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-8 px-4 text-center text-slate-500 text-sm">
+            <p>&copy; 2023 Linux Permissions Interactive Guide.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- State Management ---
+        const state = {
+            u: 7, // User
+            g: 5, // Group
+            o: 5  // Others
+        };
+
+        let chartInstance = null;
+
+        // --- Core Logic ---
+
+        function calculatePermissions() {
+            // Recalculate based on checked boxes
+            const targets = ['u', 'g', 'o'];
+            targets.forEach(t => {
+                let sum = 0;
+                document.querySelectorAll(`input[data-target="${t}"]:checked`).forEach(cb => {
+                    sum += parseInt(cb.getAttribute('data-val'));
+                });
+                state[t] = sum;
+            });
+
+            updateUI();
+            updateChart();
+        }
+
+        function updateState() {
+            calculatePermissions();
+        }
+
+        // Convert numeric state to symbolic (e.g., 7 -> rwx)
+        function getSymbolic(num) {
+            const r = (num & 4) ? 'r' : '-';
+            const w = (num & 2) ? 'w' : '-';
+            const x = (num & 1) ? 'x' : '-';
+            return r + w + x;
+        }
+
+        // Generate human readable summary
+        function getSummary() {
+            const summaries = {
+                7: "完全控制 (rwx)",
+                6: "讀取與寫入 (rw-)",
+                5: "讀取與執行 (r-x)",
+                4: "僅讀取 (r--)",
+                3: "寫入與執行 (-wx)",
+                2: "僅寫入 (-w-)",
+                1: "僅執行 (--x)",
+                0: "無權限 (---)"
+            };
+
+            let text = `<strong>解讀：</strong> `;
+            text += `擁有者${summaries[state.u]}，`;
+            text += `群組${summaries[state.g]}，`;
+            text += `其他人${summaries[state.o]}。`;
+
+            // Contextual hints
+            const fullCode = `${state.u}${state.g}${state.o}`;
+            if (fullCode === '777') text += " <span class='text-red-600 font-bold'>⚠️ 極度不安全！</span>";
+            if (fullCode === '755') text += " <span class='text-green-600 font-bold'>✅ 適合程式腳本或目錄。</span>";
+            if (fullCode === '644') text += " <span class='text-green-600 font-bold'>✅ 適合一般設定檔。</span>";
+            if (fullCode === '600' || fullCode === '700') text += " <span class='text-blue-600 font-bold'>🔒 私密檔案模式。</span>";
+
+            return text;
+        }
+
+        function updateUI() {
+            // Update big number display
+            document.getElementById('val-u').textContent = state.u;
+            document.getElementById('val-g').textContent = state.g;
+            document.getElementById('val-o').textContent = state.o;
+
+            // Update Result Card
+            document.getElementById('res-numeric').textContent = `${state.u}${state.g}${state.o}`;
+            document.getElementById('res-symbolic').textContent = `-${getSymbolic(state.u)}${getSymbolic(state.g)}${getSymbolic(state.o)}`;
+
+            // Update summary
+            document.getElementById('human-summary').innerHTML = getSummary();
+        }
+
+        // --- Chart.js Visualization ---
+        function initChart() {
+            const ctx = document.getElementById('permChart').getContext('2d');
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['擁有者 (User)', '群組 (Group)', '其他人 (Others)'],
+                    datasets: [{
+                        label: '權限等級 (0-7)',
+                        data: [state.u, state.g, state.o],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.6)', // Blue
+                            'rgba(16, 185, 129, 0.6)', // Emerald
+                            'rgba(245, 158, 11, 0.6)'  // Amber
+                        ],
+                        borderColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(245, 158, 11)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 7,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `數值: ${context.raw} (${getSymbolic(context.raw)})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = [state.u, state.g, state.o];
+                chartInstance.update();
+            }
+        }
+
+        // --- Helper Functions ---
+
+        function setScenario(u, g, o) {
+            // Helper to set bits based on integer
+            const setBits = (target, val) => {
+                document.querySelector(`input[data-target="${target}"][data-val="4"]`).checked = (val & 4) > 0;
+                document.querySelector(`input[data-target="${target}"][data-val="2"]`).checked = (val & 2) > 0;
+                document.querySelector(`input[data-target="${target}"][data-val="1"]`).checked = (val & 1) > 0;
+            };
+
+            setBits('u', u);
+            setBits('g', g);
+            setBits('o', o);
+
+            calculatePermissions(); // Trigger updates
+
+            // Scroll top slightly to show change
+            document.getElementById('simulator').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyCommand() {
+            const text = `chmod ${state.u}${state.g}${state.o} filename`;
+            copyText(text);
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`已複製: ${text}`);
+            });
+        }
+
+        function navTo(id) {
+            // Simple Tab Logic
+            document.querySelectorAll('section').forEach(sec => {
+                // Not hiding sections fully to allow scrolling, but we could focus
+            });
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+
+            // Update Active State
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active-tab');
+                btn.classList.add('inactive-tab');
+            });
+            document.getElementById(`nav-${id}`).classList.add('active-tab');
+            document.getElementById(`nav-${id}`).classList.remove('inactive-tab');
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            updateUI(); // Initial sync
+        });
+
+    </script>
+</body>
+
+</html>
