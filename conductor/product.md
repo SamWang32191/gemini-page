@@ -18,5 +18,6 @@
 
 ## 主要功能 (Key Features)
 - **多維度技術實作 (Tech Interactive Labs)：** 提供互動式模擬器，將抽象概念（如 Git Rebase, K8s RBAC）具象化。
+- **雙平台快捷鍵導航 (Multi-platform Shortcuts)：** 支援在 macOS 與 Windows 鍵位之間即時切換，滿足不同作業系統開發者的需求。
 - **全端技術索引 (Full-stack Tech Index)：** 整理彙整包括 Go, Kubernetes, Helm, Frontend Frameworks 等領域的速查表與深度指南。
 - **AI 自動化內容流水線：** 標準化「Gemini 研究 -> Canvas 生成 -> HTML 部署」的流程，快速迭代高品質內容。

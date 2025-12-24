@@ -8,6 +8,7 @@
 - **Vanilla CSS3 (Custom Design System)**: 
   - 自建全域 CSS 變數與設計系統 (`styles.css`)，不依賴第三方框架。
   - 負責頁面的 Premium 視覺設計、卡片式佈局與互動微動效。
+- **Tailwind CSS**: 於特定內容頁面（如 VS Code Shortcuts）中用於快速佈局與響應式開發。
 - **Vanilla JavaScript (ES6+)**:
   - 用於處理技術模擬器 (Labs) 的互動邏輯。
   - 管理頁面狀態與數據綁定。
