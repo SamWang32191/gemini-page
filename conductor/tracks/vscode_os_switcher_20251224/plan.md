@@ -2,7 +2,7 @@
 
 ## 第一階段：基礎架構與 HTML 重構 (Foundation & HTML Restructure)
 - [x] 任務 1：備份原始 `vscode-mac.html` 並建立開發環境。 (f93a547)
-- [ ] 任務 2：重構 `vscode-mac.html` 的表格結構。
+- [x] 任務 2：重構 `vscode-mac.html` 的表格結構。 (d7be94d)
     - 為每個 `<tr>` 加入 `data-mac` 與 `data-win` 屬性。
     - 預設將目前的 Mac 鍵位填入 `data-mac`。
     - 根據官方 PDF 填入對應的 Windows 鍵位至 `data-win`。
