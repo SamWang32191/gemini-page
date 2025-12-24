@@ -438,6 +438,12 @@ pre code {
   font-size: var(--font-size-4xl);
   line-height: 1;
   flex-shrink: 0;
+  transition: transform var(--transition-spring);
+}
+
+/* 卡片 Hover 時圖示彈跳動畫 */
+.card:hover .card__icon {
+  transform: scale(1.15) rotate(-5deg);
 }
 
 .card__content {
@@ -450,6 +456,12 @@ pre code {
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   margin-bottom: var(--space-2);
+  transition: color var(--transition-fast);
+}
+
+/* 卡片 Hover 時標題變色 */
+.card:hover .card__title {
+  color: var(--color-primary);
 }
 
 .card__description {
@@ -457,6 +469,24 @@ pre code {
   color: var(--color-text-secondary);
   line-height: var(--line-height-relaxed);
   margin-bottom: 0;
+}
+
+/* 卡片箭頭指示器 */
+.card::after {
+  content: '→';
+  position: absolute;
+  right: var(--space-6);
+  top: 50%;
+  transform: translateY(-50%) translateX(-10px);
+  font-size: var(--font-size-xl);
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-base), transform var(--transition-base);
+}
+
+.card:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 /* ==========================================================================
