@@ -20,7 +20,7 @@
     - 更新頁面標題、Navbar 標籤與官方下載連結。
 - [x] 任務 3：確保搜尋功能相容性。 (29c10a7)
     - 調整搜尋 Script，使其在過濾時能讀取當前顯示的鍵位文字。
-- [ ] Task: Conductor - User Manual Verification '第二階段' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification '第二階段' (Protocol in workflow.md) (edd346c)
 
 ## 第三階段：優化與驗證 (Optimization & Verification)
 - [ ] 任務 1：加入平滑過渡效果 (如內容變更時的微動畫)。
