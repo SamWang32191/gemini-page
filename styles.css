@@ -819,3 +819,11 @@ pre code {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover\:underline:hover {
+  text-decoration: underline;
+}

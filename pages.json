@@ -24,6 +24,18 @@
         "color": "indigo"
     },
     {
+        "title": "Git Interactive Lab",
+        "filename": "git-lab.html",
+        "emoji": "🌲",
+        "description": "互動式 Git 模擬器。視覺化體驗 add, commit, log 的運作流程，理解工作區、暫存區與版本庫的關係。",
+        "tags": [
+            "Git",
+            "Simulator",
+            "Interactive"
+        ],
+        "color": "amber"
+    },
+    {
         "title": "Hugo Learning Page",
         "filename": "hugo-leaning.html",
         "emoji": "📘",
