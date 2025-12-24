@@ -1,7 +1,7 @@
 # Track Plan: 優化入口網站首頁與自動化工作流整合
 
 ## 階段 1: 基礎視覺與架構 (Phase 1: Base Visuals & Architecture)
-- [ ] 任務：分析並建立全域 CSS 設計系統 (變數、顏色、字體)
+- [x] 任務：分析並建立全域 CSS 設計系統 (變數、顏色、字體) `f4d6115`
 - [ ] 任務：重構 `index.html` 基礎結構，導入卡片容器佈局
 - [ ] 任務：Conductor - 使用者手動驗證 '階段 1: 基礎視覺與架構' (協議詳見 workflow.md)
 
