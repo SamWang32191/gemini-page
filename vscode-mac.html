@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <title>VS Code Mac 快捷鍵大全 (VS Code Shortcuts)</title>
+    <title id="pageTitle">VS Code Mac 快捷鍵大全 (VS Code Shortcuts)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -201,11 +201,11 @@
                                     <td class="py-3 px-4 text-slate-600">向下插入一行</td>
                                     <td class="py-3 px-4 text-right keybinding-container"><kbd>⌘</kbd> <kbd>Enter</kbd></td>
                                 </tr>
-                                <tr class="hover:bg-slate-50 transition-colors" data-mac="⌥↑/↓" data-win="Alt+↑/↓">
+                                <tr class="hover:bg-slate-50 transition-colors" data-mac="⌥↑ / ↓" data-win="Alt+↑ / ↓">
                                     <td class="py-3 px-4 text-slate-600">向上/下移動此行</td>
                                     <td class="py-3 px-4 text-right keybinding-container"><kbd>⌥</kbd> <kbd>↑</kbd> / <kbd>↓</kbd></td>
                                 </tr>
-                                <tr class="hover:bg-slate-50 transition-colors" data-mac="⌥⇧↑/↓" data-win="Shift+Alt+↑/↓">
+                                <tr class="hover:bg-slate-50 transition-colors" data-mac="⌥⇧↑ / ↓" data-win="Shift+Alt+↑ / ↓">
                                     <td class="py-3 px-4 text-slate-600">向上/下複製此行</td>
                                     <td class="py-3 px-4 text-right keybinding-container"><kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>↑</kbd> /
                                         <kbd>↓</kbd></td>
@@ -427,7 +427,7 @@
                 </h3>
                 <p class="text-slate-600">
                     如果想看完整官方快捷鍵清單，可以在 VS Code 中按 <kbd>⌘</kbd> <kbd>K</kbd> <kbd>⌘</kbd> <kbd>R</kbd> 叫出 PDF，或直接參考 <a
-                        href="https://code.visualstudio.com/shortcuts/keyboard-shortcuts-macos.pdf" target="_blank"
+                        id="officialPdfLink" href="https://code.visualstudio.com/shortcuts/keyboard-shortcuts-macos.pdf" target="_blank"
                         class="text-sky-600 hover:underline hover:text-sky-700">官方 macOS 快捷鍵表格</a>。
                 </p>
             </div>
@@ -466,6 +466,78 @@
         // Search Functionality
         const searchInput = document.getElementById('searchInput');
         const categories = document.querySelectorAll('.shortcut-category');
+        const osSwitcher = document.getElementById('osSwitcher');
+        const editionLabel = document.getElementById('editionLabel');
+        const pageTitle = document.getElementById('pageTitle');
+        const officialPdfLink = document.getElementById('officialPdfLink');
+        
+        let currentOS = 'mac'; // 'mac' or 'win'
+
+        function updateKeybindings() {
+            const rows = document.querySelectorAll('tr[data-mac]');
+            
+            rows.forEach(row => {
+                const container = row.querySelector('.keybinding-container');
+                const keyData = currentOS === 'mac' ? row.getAttribute('data-mac') : row.getAttribute('data-win');
+                
+                // Clear container
+                container.innerHTML = '';
+                
+                // Parse keyData and create kbd elements
+                // Splitting logic: handles spaces for chords (Cmd K Cmd S) and ignores slashes for toggle rows
+                const parts = keyData.split(/(\s+)/);
+                
+                parts.forEach(part => {
+                    if (part.trim() === '') {
+                        container.appendChild(document.createTextNode(' '));
+                    } else if (part === '/') {
+                        container.appendChild(document.createTextNode(' / '));
+                    } else {
+                        // Further split by individual keys if needed (like Ctrl+Shift+P)
+                        // But for simplicity and UI consistency, we'll keep symbols like ⌘, ⇧ as individual kbd 
+                        // or group them if they are combined with +
+                        const subParts = part.split('+');
+                        subParts.forEach((subPart, index) => {
+                            const kbd = document.createElement('kbd');
+                            kbd.textContent = subPart;
+                            container.appendChild(kbd);
+                            if (index < subParts.length - 1) {
+                                container.appendChild(document.createTextNode(' '));
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Update UI Labels
+            if (currentOS === 'mac') {
+                editionLabel.textContent = 'Mac Edition';
+                editionLabel.className = 'text-xs bg-sky-500 px-2 py-0.5 rounded-full ml-2';
+                osSwitcher.querySelector('span').textContent = '切換至 Windows';
+                pageTitle.textContent = 'VS Code Mac 快捷鍵大全 (VS Code Shortcuts)';
+                officialPdfLink.textContent = '官方 macOS 快捷鍵表格';
+                officialPdfLink.href = 'https://code.visualstudio.com/shortcuts/keyboard-shortcuts-macos.pdf';
+            } else {
+                editionLabel.textContent = 'Windows Edition';
+                editionLabel.className = 'text-xs bg-blue-600 px-2 py-0.5 rounded-full ml-2';
+                osSwitcher.querySelector('span').textContent = '切換至 macOS';
+                pageTitle.textContent = 'VS Code Windows 快捷鍵大全 (VS Code Shortcuts)';
+                officialPdfLink.textContent = '官方 Windows 快捷鍵表格';
+                officialPdfLink.href = 'https://code.visualstudio.com/shortcuts/keyboard-shortcuts-windows.pdf';
+            }
+        }
+
+        osSwitcher.addEventListener('click', () => {
+            currentOS = currentOS === 'mac' ? 'win' : 'mac';
+            updateKeybindings();
+            
+            // Add a small animation effect
+            osSwitcher.classList.add('scale-95');
+            setTimeout(() => osSwitcher.classList.remove('scale-95'), 100);
+        });
+
+        // Initialize display
+        updateKeybindings();
 
         searchInput.addEventListener('keyup', (e) => {
             const term = e.target.value.toLowerCase();
