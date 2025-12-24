@@ -547,8 +547,11 @@
                 let hasVisibleRows = false;
 
                 rows.forEach(row => {
-                    const text = row.innerText.toLowerCase();
-                    if (text.includes(term)) {
+                    const functionName = row.querySelector('td').innerText.toLowerCase();
+                    const macKeys = row.getAttribute('data-mac') ? row.getAttribute('data-mac').toLowerCase() : '';
+                    const winKeys = row.getAttribute('data-win') ? row.getAttribute('data-win').toLowerCase() : '';
+                    
+                    if (functionName.includes(term) || macKeys.includes(term) || winKeys.includes(term)) {
                         row.style.display = '';
                         hasVisibleRows = true;
                     } else {
