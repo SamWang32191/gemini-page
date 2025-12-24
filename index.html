@@ -4,136 +4,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gemini Learning Hub - 全端工程師的現代化技術知識庫與學習平台，提供互動式技術模擬器與深度指南。">
+    <meta name="keywords" content="全端開發, Go, Kubernetes, Helm, Linux, DevOps, SRE, 技術學習">
+    <meta name="author" content="Gemini Learning Hub">
+    <meta name="theme-color" content="#3b5bdb">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Gemini Learning Hub">
+    <meta property="og:description" content="全端工程師的現代化技術知識庫與學習平台">
+    <meta property="og:type" content="website">
+    
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <title>Gemini Page Index</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f8fafc;
-            color: #334155;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <title>Gemini Learning Hub - 技術知識庫</title>
 </head>
 
-<body class="flex flex-col min-h-screen">
-
+<body>
     <!-- Navigation -->
-    <nav class="bg-slate-800 text-white sticky top-0 z-50 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-2">
-                    <div class="text-xl font-bold tracking-wider">📚 Gemini Learning Hub</div>
-                    <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded-full">Index</span>
+    <nav class="navbar" role="navigation" aria-label="主導覽">
+        <div class="navbar__container">
+            <div class="navbar__brand">
+                <div class="navbar__logo">
+                    <span aria-hidden="true">📚</span>
+                    Gemini Learning Hub
                 </div>
+                <span class="navbar__badge">Index</span>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow bg-slate-50 p-4 md:p-8 overflow-y-auto">
-        <div class="max-w-7xl mx-auto">
-
-            <!-- Welcome Section -->
-            <div class="bg-white rounded-lg shadow p-6 border-l-4 border-indigo-500 mb-8">
-                <h1 class="text-3xl font-bold text-slate-800 mb-3">歡迎來到 Gemini Learning Hub</h1>
-                <p class="text-slate-600 leading-relaxed">
-                    這裡收集了各種技術學習資源，幫助你快速掌握不同的技術棧。選擇下方的主題開始你的學習之旅。
+    <main class="main" id="main-content">
+        <div class="main__container">
+            
+            <!-- Hero Section -->
+            <section class="hero" aria-labelledby="hero-title">
+                <h1 id="hero-title" class="hero__title">歡迎來到 Gemini Learning Hub</h1>
+                <p class="hero__description">
+                    這裡收集了各種技術學習資源，幫助你快速掌握不同的技術棧。
+                    透過 Gemini 的深度研究能力與 Canvas 生成的互動式內容，
+                    提供從前端、後端到 DevOps 的全方位技術導航。
                 </p>
-            </div>
+            </section>
 
-            <!-- Learning Modules Grid (動態渲染) -->
-            <div id="learning-modules" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 頁面卡片將由 JavaScript 動態生成 -->
-            </div>
+            <!-- Learning Modules Grid -->
+            <section aria-labelledby="modules-title">
+                <h2 id="modules-title" class="visually-hidden">學習模組</h2>
+                <div id="learning-modules" class="grid grid-cols-1 lg:grid-cols-2 stagger-fade">
+                    <!-- 頁面卡片將由 JavaScript 動態生成 -->
+                </div>
+            </section>
 
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 mt-auto">
-        <div class="max-w-7xl mx-auto py-4 px-4 text-center text-sm text-slate-500">
+    <footer class="footer" role="contentinfo">
+        <div class="footer__content">
             Gemini Learning Hub &copy; 2025. Created for learning purposes.
         </div>
     </footer>
 
-    <!-- 動態載入頁面清單 -->
+    <!-- Dynamic Page Loader -->
     <script>
-        // 載入 pages.json 並動態生成頁面卡片
-        fetch('pages.json')
-            .then(response => response.json())
-            .then(pages => {
-                const container = document.getElementById('learning-modules');
+        /**
+         * 載入 pages.json 並動態生成頁面卡片
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLearningModules();
+        });
 
+        async function loadLearningModules() {
+            const container = document.getElementById('learning-modules');
+            
+            try {
+                const response = await fetch('pages.json');
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const pages = await response.json();
+                
                 pages.forEach(page => {
                     const card = createPageCard(page);
                     container.appendChild(card);
                 });
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('無法載入頁面設定:', error);
-                document.getElementById('learning-modules').innerHTML =
-                    '<div class="col-span-2 text-center text-slate-500 py-8">無法載入頁面列表</div>';
-            });
+                container.innerHTML = `
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <p style="text-align: center; color: var(--color-text-muted);">
+                            無法載入頁面列表，請稍後再試。
+                        </p>
+                    </div>
+                `;
+            }
+        }
 
-        // 建立頁面卡片元素
+        /**
+         * 建立頁面卡片元素
+         * @param {Object} page - 頁面資訊物件
+         * @returns {HTMLElement} - 連結包裹的卡片元素
+         */
         function createPageCard(page) {
             const link = document.createElement('a');
             link.href = page.filename;
-            link.className = 'block';
+            link.className = 'link-block';
+            link.setAttribute('aria-label', `前往 ${page.title}`);
 
+            const colorClass = `card--${page.color}`;
+            
             link.innerHTML = `
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-${page.color}-500 card-hover h-full">
-                    <div class="flex items-start gap-4">
-                        <div class="text-4xl">${page.emoji}</div>
-                        <div class="flex-1">
-                            <h2 class="text-xl font-bold text-slate-800 mb-2">${page.title}</h2>
-                            <p class="text-sm text-slate-600 mb-3">
-                                ${page.description}
-                            </p>
-                            <div class="flex flex-wrap gap-2">
-                                ${page.tags.map(tag =>
-                `<span class="text-xs bg-${page.color}-100 text-${page.color}-700 px-2 py-1 rounded">${tag}</span>`
-            ).join('')}
+                <article class="card card--accent ${colorClass}">
+                    <div class="card__header">
+                        <div class="card__icon" aria-hidden="true">${page.emoji}</div>
+                        <div class="card__content">
+                            <h3 class="card__title">${page.title}</h3>
+                            <p class="card__description">${page.description}</p>
+                            <div class="tag-group">
+                                ${page.tags.map(tag => 
+                                    `<span class="tag tag--${page.color}">${tag}</span>`
+                                ).join('')}
                             </div>
                         </div>
                     </div>
-                </div>
+                </article>
             `;
 
             return link;
         }
     </script>
-
 </body>
 
 </html>
