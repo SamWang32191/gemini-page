@@ -8,7 +8,7 @@
 ## 階段 2: 首頁動態內容 (Phase 2: Homepage Dynamic Content)
 - [x] 任務：撰寫 JavaScript 讓首頁動態讀取並渲染 `pages.json` 卡片 (已於階段1完成) `6ee3f1f`
 - [x] 任務：為卡片加入 Hover 動畫與微動效 `7d7f262`
-- [ ] 任務：Conductor - 使用者手動驗證 '階段 2: 首頁動態內容' (協議詳見 workflow.md)
+- [x] 任務：Conductor - 使用者手動驗證 '階段 2: 首頁動態內容' ✅ Checkpoint `d4b5d88`
 
 ## 階段 3: Git 模擬器示範頁 (Phase 3: Git Simulator Lab)
 - [ ] 任務：建立 `git-lab.html` 結構並實作互動式 Git 概念預覽
