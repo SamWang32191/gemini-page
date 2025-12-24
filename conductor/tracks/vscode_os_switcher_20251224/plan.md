@@ -25,5 +25,5 @@
 ## 第三階段：優化與驗證 (Optimization & Verification)
 - [x] 任務 1：加入平滑過渡效果 (如內容變更時的微動畫)。 (94f318d)
 - [x] 任務 2：執行全平台驗證 (Windows/Mac 顯示正確性檢查)。 (8c08632)
-- [ ] 任務 3：響應式佈局檢查 (確保手機版導航列按鈕不跑版)。
+- [x] 任務 3：響應式佈局檢查 (確保手機版導航列按鈕不跑版)。 (80dc091)
 - [ ] Task: Conductor - User Manual Verification '第三階段' (Protocol in workflow.md)
