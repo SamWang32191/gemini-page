@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFS 與 Kubernetes 持久化配置指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            /* Slate 50 */
+            color: #334155;
+            /* Slate 700 */
+        }
+
+        /* Chart Container Styling as per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        .tab-btn.active {
+            border-bottom: 3px solid #3b82f6;
+            /* Blue 500 */
+            color: #1d4ed8;
+            /* Blue 700 */
+            background-color: #eff6ff;
+            /* Blue 50 */
+        }
+
+        .interactive-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .interactive-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .interactive-card.selected {
+            border: 2px solid #3b82f6;
+            background-color: #f0f9ff;
+        }
+
+        /* Logic Flow Connection Lines (CSS Pure) */
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+    </style>
+    <!-- Chosen Palette: Slate (Background/Text), Blue (Primary/Action), Emerald (Success/Safe), Amber (Warning/Risk), Rose (Danger) -->
+    <!-- Application Structure Plan: 
+         1. Introduction: Brief context setting.
+         2. Tab System: To separate the three distinct learning phases (Basics -> Logic -> K8s Implementation).
+         3. NFS Parameters (Tab 1): Uses a Radar Chart to visualize abstract trade-offs (Speed vs Safety) because these config flags are about balancing system behavior.
+         4. Squash Simulator (Tab 2): A functional Input->Process->Output tool. Users select inputs, JS logic calculates the resulting UID, demonstrating the confusing 'root_squash' concept clearly.
+         5. K8s Integration (Tab 3): A visual architecture diagram using HTML Grid. It contrasts 'Error State' vs 'Best Practice' to teach the UID/GID solution pattern.
+    -->
+    <!-- Visualization & Content Choices:
+         - Radar Chart (Chart.js): To show the profile of an NFS configuration (Safety, Performance, Convenience). Interaction: Clicking config buttons updates the chart.
+         - Squash Matrix (HTML/JS): Interactive calculator replacing complex text tables. Goal: Clarify UID mapping.
+         - Flow Blocks (HTML/Tailwind): Visualizing the Pod -> PVC -> NFS path. Replacing Mermaid/SVG for structural diagrams.
+         - Dynamic Text: Explanations update based on user interaction to provide context.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">N</div>
+                <h1 class="text-xl font-bold text-slate-800">NFS & K8s 權限配置實驗室</h1>
+            </div>
+            <div class="text-sm text-slate-500 hidden sm:block">互動式學習指南</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- Intro Section -->
+        <section class="mb-8 max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">深入理解 `/etc/exports` 與 Kubernetes 整合</h2>
+            <p class="text-lg text-slate-600 leading-relaxed">
+                NFS (Network File System) 是 Linux 與 Kubernetes 環境中最常見的存儲解決方案之一。
+                然而，`root_squash`、`sync` 等參數的誤解常導致權限錯誤或效能瓶頸。
+                本應用程式將帶您逐項解析參數作用，並模擬 Kubernetes Pod 掛載 NFS 時的最佳實踐 (UID/GID 設定)。
+            </p>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <div class="flex flex-wrap justify-center border-b border-slate-200 mb-8 sticky top-16 bg-[#f8fafc] z-40 py-2">
+            <button onclick="switchTab('nfs-basics')" id="tab-nfs-basics"
+                class="tab-btn active px-6 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 focus:outline-none transition-colors rounded-t-lg mx-1">
+                1. NFS 參數解析
+            </button>
+            <button onclick="switchTab('squash-sim')" id="tab-squash-sim"
+                class="tab-btn px-6 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 focus:outline-none transition-colors rounded-t-lg mx-1">
+                2. 權限壓縮模擬器 (Squashing)
+            </button>
+            <button onclick="switchTab('k8s-practice')" id="tab-k8s-practice"
+                class="tab-btn px-6 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 focus:outline-none transition-colors rounded-t-lg mx-1">
+                3. K8s UID 最佳實踐
+            </button>
+        </div>
+
+        <!-- TAB 1: NFS Basics -->
+        <div id="content-nfs-basics" class="tab-content block animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: Controls -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                            <span
+                                class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm mr-2">1</span>
+                            參數配置實驗
+                        </h3>
+                        <p class="text-slate-600 mb-6">點擊下方的參數選項，查看其對系統行為的具體影響與權衡。</p>
+
+                        <!-- Parameter Groups -->
+                        <div class="space-y-6">
+                            <!-- Access Mode -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">存取模式
+                                    (Access)</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div onclick="selectParam('access', 'rw')" id="btn-rw"
+                                        class="interactive-card selected p-4 rounded-lg border border-slate-200 bg-white">
+                                        <div class="font-bold text-slate-800">rw</div>
+                                        <div class="text-xs text-slate-500">Read-Write</div>
+                                    </div>
+                                    <div onclick="selectParam('access', 'ro')" id="btn-ro"
+                                        class="interactive-card p-4 rounded-lg border border-slate-200 bg-white">
+                                        <div class="font-bold text-slate-800">ro</div>
+                                        <div class="text-xs text-slate-500">Read-Only</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sync Mode -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">同步策略
+                                    (Sync Strategy)</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div onclick="selectParam('sync', 'sync')" id="btn-sync"
+                                        class="interactive-card selected p-4 rounded-lg border border-slate-200 bg-white">
+                                        <div class="font-bold text-slate-800">sync</div>
+                                        <div class="text-xs text-slate-500">同步寫入 (Safe)</div>
+                                    </div>
+                                    <div onclick="selectParam('sync', 'async')" id="btn-async"
+                                        class="interactive-card p-4 rounded-lg border border-slate-200 bg-white">
+                                        <div class="font-bold text-slate-800">async</div>
+                                        <div class="text-xs text-slate-500">非同步寫入 (Fast)</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Squash Mode -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">使用者映射
+                                    (User Mapping)</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div onclick="selectParam('squash', 'root_squash')" id="btn-root_squash"
+                                        class="interactive-card selected p-3 rounded-lg border border-slate-200 bg-white text-center">
+                                        <div class="font-bold text-slate-800 text-sm">root_squash</div>
+                                        <div class="text-[10px] text-slate-500 mt-1">預設安全</div>
+                                    </div>
+                                    <div onclick="selectParam('squash', 'no_root_squash')" id="btn-no_root_squash"
+                                        class="interactive-card p-3 rounded-lg border border-slate-200 bg-white text-center">
+                                        <div class="font-bold text-slate-800 text-sm">no_root_squash</div>
+                                        <div class="text-[10px] text-slate-500 mt-1">允許 Root</div>
+                                    </div>
+                                    <div onclick="selectParam('squash', 'all_squash')" id="btn-all_squash"
+                                        class="interactive-card p-3 rounded-lg border border-slate-200 bg-white text-center">
+                                        <div class="font-bold text-slate-800 text-sm">all_squash</div>
+                                        <div class="text-[10px] text-slate-500 mt-1">全部匿名</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Explanation Box -->
+                    <div class="bg-slate-800 text-white p-6 rounded-xl shadow-lg">
+                        <h4 class="font-bold text-blue-300 mb-2" id="explanation-title">當前配置分析</h4>
+                        <p class="text-sm text-slate-300 mb-4" id="explanation-text">
+                            請選擇上方參數以查看詳細說明。
+                        </p>
+                        <div class="flex items-center gap-2 text-xs text-slate-400 font-mono bg-slate-900 p-3 rounded">
+                            <span class="text-green-400">/etc/exports:</span>
+                            <span id="export-preview">/data *(rw,sync,root_squash)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Visualizer -->
+                <div class="lg:col-span-5 flex flex-col">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex-grow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-2 text-center">配置特性雷達圖</h3>
+                        <p class="text-xs text-slate-500 text-center mb-6">視覺化此組合的優缺點平衡</p>
+
+                        <div class="chart-container">
+                            <canvas id="nfsRadarChart"></canvas>
+                        </div>
+
+                        <div class="mt-6 space-y-3">
+                            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+                                <span class="text-slate-600">資料安全性 (Data Safety)</span>
+                                <span class="font-bold text-emerald-600" id="score-safety">高</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+                                <span class="text-slate-600">寫入效能 (Performance)</span>
+                                <span class="font-bold text-amber-600" id="score-perf">低</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-slate-600">操作便利性 (Convenience)</span>
+                                <span class="font-bold text-blue-600" id="score-conv">中</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Squash Simulator -->
+        <div id="content-squash-sim" class="tab-content hidden animate-fade-in">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">權限壓縮邏輯模擬器 (The Squash Logic)</h3>
+                <p class="text-slate-600">
+                    NFS 的權限映射常讓人困惑。此工具模擬當 Client 端的使用者對 NFS 發起請求時，Server 端實際看到的身份 (Effective UID)。
+                    這是理解為什麼會出現 "Permission Denied" 的關鍵。
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">
+
+                    <!-- Step 1: Client User -->
+                    <div class="p-8 bg-blue-50">
+                        <div class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-4">Step 1: Client 端發起者
+                        </div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">你是誰？(K8s Pod User)</label>
+                        <select id="sim-client-user" onchange="updateSquashSim()"
+                            class="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2.5 bg-white border">
+                            <option value="root">Root User (UID 0)</option>
+                            <option value="user">Regular User (UID 1000)</option>
+                            <option value="custom">Custom User (UID 2025)</option>
+                        </select>
+                        <div class="mt-4 text-sm text-slate-600 bg-white p-3 rounded border border-blue-100">
+                            <span class="font-bold">情境：</span>
+                            <span id="sim-client-desc">Pod 以 Root 身份運行 (預設情況)。</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Server Config -->
+                    <div class="p-8 bg-slate-50">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Step 2: NFS Server
+                            設定</div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">/etc/exports 設定</label>
+                        <div class="space-y-2">
+                            <div onclick="setSimConfig('root_squash')" id="sim-opt-root_squash"
+                                class="cursor-pointer p-3 rounded border border-slate-300 bg-white hover:border-blue-400 flex items-center justify-between shadow-sm">
+                                <span class="font-mono text-sm">root_squash</span>
+                                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                            </div>
+                            <div onclick="setSimConfig('no_root_squash')" id="sim-opt-no_root_squash"
+                                class="cursor-pointer p-3 rounded border border-slate-300 bg-white hover:border-blue-400 flex items-center justify-between shadow-sm">
+                                <span class="font-mono text-sm">no_root_squash</span>
+                                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                            </div>
+                            <div onclick="setSimConfig('all_squash')" id="sim-opt-all_squash"
+                                class="cursor-pointer p-3 rounded border border-slate-300 bg-white hover:border-blue-400 flex items-center justify-between shadow-sm">
+                                <span class="font-mono text-sm">all_squash</span>
+                                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Result -->
+                    <div
+                        class="p-8 bg-slate-800 text-white flex flex-col justify-center items-center text-center relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500">
+                        </div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Step 3: Server
+                            端實際權限</div>
+
+                        <div class="mb-2 text-slate-300 text-sm">映射結果 UID</div>
+                        <div id="sim-result-uid"
+                            class="text-5xl font-mono font-bold text-white mb-2 transition-all duration-300">65534</div>
+                        <div id="sim-result-user" class="text-xl text-blue-300 font-mono mb-6">(nfsnobody)</div>
+
+                        <div id="sim-result-msg" class="text-sm bg-slate-700/50 p-3 rounded border border-slate-600">
+                            Root 被壓縮為匿名使用者，無法寫入 root 擁有的檔案。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-amber-50 border-l-4 border-amber-500 p-4">
+                    <h4 class="font-bold text-amber-800 mb-1">常見錯誤 (Gotcha)</h4>
+                    <p class="text-sm text-amber-700">
+                        如果 NFS Server 上的資料夾是由 `root` (UID 0) 建立的，且設定了 `root_squash` (預設)，
+                        Client 端的 Root 使用者在寫入時會變成 `nobody`，因此會遭遇 <strong>Permission Denied</strong>。
+                    </p>
+                </div>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                    <h4 class="font-bold text-blue-800 mb-1">解決思路</h4>
+                    <p class="text-sm text-blue-700">
+                        1. 將 Server 資料夾 `chown` 給 `nobody` (不推薦，太寬鬆)。<br>
+                        2. <strong>最佳解：</strong> 保持 `root_squash`，但在 K8s 中使用 `fsGroup` 或 `runAsUser` 對齊 UID (詳見下一頁)。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: K8s Best Practices -->
+        <div id="content-k8s-practice" class="tab-content hidden animate-fade-in">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-800">Kubernetes 最佳實踐流程</h3>
+                    <p class="text-slate-600 mt-2">如何在保持 `root_squash` 安全性的同時，讓 Pod 順利寫入？</p>
+                </div>
+                <div class="bg-white border border-slate-300 rounded-lg p-1 flex">
+                    <button onclick="toggleK8sMode('bad')" id="btn-k8s-bad"
+                        class="px-4 py-2 text-sm rounded font-medium transition-colors bg-rose-100 text-rose-700">錯誤配置</button>
+                    <button onclick="toggleK8sMode('good')" id="btn-k8s-good"
+                        class="px-4 py-2 text-sm rounded font-medium transition-colors text-slate-600 hover:bg-slate-100">最佳實踐</button>
+                </div>
+            </div>
+
+            <!-- Architecture Diagram Container -->
+            <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200 relative">
+
+                <!-- Status Banner -->
+                <div id="k8s-status-banner"
+                    class="absolute top-0 left-0 w-full py-2 text-center text-sm font-bold text-white bg-rose-500 rounded-t-xl transition-colors duration-500">
+                    模擬狀態：權限拒絕 (Permission Denied)
+                </div>
+
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
+
+                    <!-- Node: K8s POD -->
+                    <div
+                        class="md:col-span-2 border-2 border-dashed border-slate-300 rounded-xl p-4 flex flex-col relative bg-slate-50">
+                        <div class="absolute -top-3 left-4 bg-slate-50 px-2 text-xs font-bold text-slate-400">Kubernetes
+                            Node</div>
+                        <div class="flex-grow flex flex-col items-center justify-center space-y-4">
+                            <!-- POD Box -->
+                            <div
+                                class="w-full bg-white border border-slate-200 rounded-lg shadow-sm p-4 text-center z-10">
+                                <div class="font-bold text-blue-600 mb-1">Pod (Container)</div>
+                                <div class="text-xs text-slate-500 mb-3">Process Identity</div>
+
+                                <div id="k8s-pod-config"
+                                    class="bg-slate-100 rounded p-2 text-xs font-mono text-left transition-all duration-500">
+                                    user: root (uid 0)<br>
+                                    group: root (gid 0)
+                                </div>
+                            </div>
+
+                            <!-- Volume Mount -->
+                            <div class="w-full bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-center">
+                                <div class="text-xs font-bold text-indigo-600">Volume Mount</div>
+                                <div class="text-xs text-indigo-400">/mnt/data</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="md:col-span-1 flex flex-col items-center justify-center">
+                        <div class="text-xs text-slate-400 mb-2">NFS Protocol</div>
+                        <div class="h-1 w-full bg-slate-300 relative">
+                            <div id="traffic-flow"
+                                class="absolute top-0 left-0 h-full w-0 bg-rose-500 transition-all duration-1000"></div>
+                        </div>
+                        <div class="text-2xl text-slate-300 mt-[-14px]">►</div>
+                    </div>
+
+                    <!-- Node: NFS Server -->
+                    <div
+                        class="md:col-span-2 border-2 border-slate-300 rounded-xl p-4 flex flex-col relative bg-slate-50">
+                        <div class="absolute -top-3 right-4 bg-slate-50 px-2 text-xs font-bold text-slate-400">NFS
+                            Server</div>
+                        <div class="flex-grow flex flex-col items-center justify-center space-y-4">
+                            <!-- NFS Config -->
+                            <div class="w-full bg-slate-800 text-white rounded-lg shadow-sm p-4 text-center">
+                                <div class="font-bold text-amber-400 mb-1">/etc/exports</div>
+                                <div class="text-xs text-slate-400 mb-3">Permission Logic</div>
+                                <div class="bg-slate-900 rounded p-2 text-xs font-mono text-left opacity-80">
+                                    /data *(rw, root_squash)
+                                </div>
+                            </div>
+
+                            <!-- File System -->
+                            <div id="fs-box"
+                                class="w-full bg-white border-2 border-rose-200 rounded-lg p-3 text-center transition-colors duration-500">
+                                <div class="text-xs font-bold text-slate-600 mb-1">File System (/data)</div>
+                                <div id="fs-perms" class="text-xs font-mono text-rose-600 font-bold">
+                                    Owner: root (0)<br>
+                                    Mode: 755 (rwxr-xr-x)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explanation Panel -->
+                <div class="mt-8 p-6 bg-slate-50 rounded-lg border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-2 flex items-center">
+                        <span id="k8s-result-icon" class="text-xl mr-2">❌</span>
+                        <span id="k8s-result-title">失敗原因分析</span>
+                    </h4>
+                    <p id="k8s-result-desc" class="text-sm text-slate-600 leading-relaxed">
+                        Pod 預設以 root 運行。NFS 收到來自 uid 0 的寫入請求，因為 `root_squash`，將其映射為 `nobody` (uid 65534)。
+                        <br>
+                        然而，NFS Server 上的資料夾擁有者是 `root`，且權限是 `755` (只有 owner 可寫)。
+                        <br>
+                        <strong>結果：</strong> `nobody` 嘗試寫入 `root` 的資料夾 -> <span
+                            class="text-rose-600 font-bold">Permission Denied</span>。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Code Snippet -->
+            <div id="code-snippet-container" class="mt-8 hidden animate-fade-in">
+                <h4 class="font-bold text-slate-700 mb-3">YAML 解決方案參考</h4>
+                <div class="bg-slate-900 text-slate-200 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+                    <pre>apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-client-demo
+spec:
+  securityContext:
+    # 關鍵：讓 K8s 自動將 Volume 權限修正為此 GID 可寫
+    fsGroup: 2000 
+    # 選用：指定 Pod 以非 Root 身份運行 (配合 NFS 上的設定)
+    runAsUser: 1000
+  containers:
+  - name: app
+    image: alpine
+    volumeMounts:
+    - name: nfs-vol
+      mountPath: /mnt/data
+  volumes:
+  - name: nfs-vol
+    nfs:
+      server: 10.0.0.1
+      path: /data</pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+            <p>Designed for NFS & Kubernetes Learners</p>
+            <p class="mt-2 text-xs text-slate-400">本地單頁應用程式 • 無需後端 • 資料僅供教學模擬參考</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- State Management ---
+        const state = {
+            currentTab: 'nfs-basics',
+            nfs: {
+                access: 'rw',
+                sync: 'sync',
+                squash: 'root_squash'
+            },
+            sim: {
+                client: 'root',
+                server: 'root_squash'
+            },
+            k8s: 'bad'
+        };
+
+        // --- Chart.js Initialization ---
+        let radarChart;
+
+        function initCharts() {
+            const ctx = document.getElementById('nfsRadarChart').getContext('2d');
+
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['寫入效能 (Speed)', '資料安全 (Safety)', '操作便利 (Convenience)', '權限嚴謹度 (Strictness)'],
+                    datasets: [{
+                        label: '當前配置評分',
+                        data: [50, 90, 60, 90], // Initial: rw, sync, root_squash
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: {
+                                font: { size: 12, family: "'Noto Sans TC', sans-serif" },
+                                color: '#64748b'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: { display: false } // Hide numbers for cleaner look
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ': ' + context.raw + '/100';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            updateChartData(); // Initial calculation
+        }
+
+        // --- Core Logic: NFS Params Trade-off ---
+        function updateChartData() {
+            let speed = 50, safety = 50, conv = 50, strict = 50;
+
+            // Sync Logic
+            if (state.nfs.sync === 'sync') {
+                speed = 30; safety = 95;
+            } else {
+                speed = 95; safety = 30;
+            }
+
+            // Squash Logic
+            if (state.nfs.squash === 'root_squash') {
+                strict = 90; conv = 40;
+            } else if (state.nfs.squash === 'no_root_squash') {
+                strict = 10; conv = 95;
+            } else if (state.nfs.squash === 'all_squash') {
+                strict = 95; conv = 20;
+            }
+
+            // RO Logic
+            if (state.nfs.access === 'ro') {
+                conv = 10; // Can't write is inconvenient
+                safety = 100; // Can't corrupt data
+                speed = 100; // Reading is fast
+            }
+
+            // Update Chart
+            radarChart.data.datasets[0].data = [speed, safety, conv, strict];
+            radarChart.update();
+
+            // Update Text Scores
+            document.getElementById('score-safety').innerText = safety > 80 ? '極高' : (safety > 50 ? '高' : '低風險');
+            document.getElementById('score-safety').className = safety > 50 ? 'font-bold text-emerald-600' : 'font-bold text-amber-600';
+
+            document.getElementById('score-perf').innerText = speed > 80 ? '極快' : '一般';
+            document.getElementById('score-perf').className = speed > 80 ? 'font-bold text-emerald-600' : 'font-bold text-slate-600';
+
+            document.getElementById('score-conv').innerText = conv > 80 ? '便利' : '受限';
+        }
+
+        function updateExplanation() {
+            const preview = `/data *(${state.nfs.access},${state.nfs.sync},${state.nfs.squash})`;
+            document.getElementById('export-preview').innerText = preview;
+
+            let title = "", desc = "";
+            const s = state.nfs;
+
+            if (s.sync === 'async') {
+                title = "⚠️ 注意資料風險";
+                desc = "非同步寫入 (async) 會先回覆 Client 寫入成功，再實際寫入磁碟。若伺服器斷電，RAM 中的資料將遺失。優點是效能極高。";
+            } else if (s.squash === 'no_root_squash') {
+                title = "⚠️ 安全性警告";
+                desc = "no_root_squash 允許 Client 的 Root 使用者在 NFS Server 上也擁有 Root 權限。這意味著如果 Pod 被駭，駭客可以直接破壞 NFS 上的任何系統檔案。";
+            } else if (s.squash === 'all_squash') {
+                title = "ℹ️ 全匿名模式";
+                desc = "無論 Client 是誰，在 Server 上通通視為 nobody (或指定 uid)。適合公開讀取的資料夾。";
+            } else {
+                title = "✅ 標準安全配置";
+                desc = "sync 確保資料落盤才回應；root_squash 確保 Client Root 無法擁有 Server Root 權限。這是最推薦的生產環境設定。";
+            }
+
+            document.getElementById('explanation-title').innerText = title;
+            document.getElementById('explanation-text').innerText = desc;
+        }
+
+        function selectParam(category, value) {
+            // Update state
+            state.nfs[category] = value;
+
+            // Update UI Styling
+            const buttons = document.querySelectorAll(`[id^="btn-${category === 'squash' ? '' : ''}"]`);
+            // The selector logic is a bit manual here for simplicity
+            if (category === 'access') {
+                document.getElementById('btn-rw').classList.remove('selected', 'bg-f0f9ff');
+                document.getElementById('btn-ro').classList.remove('selected', 'bg-f0f9ff');
+            } else if (category === 'sync') {
+                document.getElementById('btn-sync').classList.remove('selected', 'bg-f0f9ff');
+                document.getElementById('btn-async').classList.remove('selected', 'bg-f0f9ff');
+            } else {
+                document.getElementById('btn-root_squash').classList.remove('selected', 'bg-f0f9ff');
+                document.getElementById('btn-no_root_squash').classList.remove('selected', 'bg-f0f9ff');
+                document.getElementById('btn-all_squash').classList.remove('selected', 'bg-f0f9ff');
+            }
+
+            document.getElementById(`btn-${value}`).classList.add('selected');
+
+            // Trigger updates
+            updateChartData();
+            updateExplanation();
+        }
+
+        // --- Tab Navigation ---
+        function switchTab(tabId) {
+            // Hide all content
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Show selected
+            document.getElementById(`content-${tabId}`).classList.remove('hidden');
+
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active', 'border-b-3', 'text-blue-700', 'bg-blue-50'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            state.currentTab = tabId;
+
+            // Re-render chart if navigating back to basics (fix canvas sizing issues sometimes)
+            if (tabId === 'nfs-basics' && radarChart) {
+                radarChart.resize();
+            }
+        }
+
+        // --- Logic: Squash Simulator ---
+        let simConfig = 'root_squash';
+
+        function setSimConfig(val) {
+            simConfig = val;
+            // UI Update
+            ['root_squash', 'no_root_squash', 'all_squash'].forEach(v => {
+                const el = document.getElementById(`sim-opt-${v}`);
+                if (v === val) {
+                    el.classList.add('border-blue-500', 'bg-blue-50');
+                    el.querySelector('span:last-child').classList.replace('bg-slate-300', 'bg-blue-500');
+                } else {
+                    el.classList.remove('border-blue-500', 'bg-blue-50');
+                    el.querySelector('span:last-child').classList.replace('bg-blue-500', 'bg-slate-300');
+                }
+            });
+            updateSquashSim();
+        }
+
+        function updateSquashSim() {
+            const clientUser = document.getElementById('sim-client-user').value;
+            let resultUid = '';
+            let resultName = '';
+            let msg = '';
+
+            // Logic Matrix
+            if (simConfig === 'all_squash') {
+                resultUid = '65534';
+                resultName = '(nfsnobody)';
+                msg = "全體壓縮：無論來源是誰，都變成匿名使用者。";
+            } else if (simConfig === 'no_root_squash') {
+                if (clientUser === 'root') {
+                    resultUid = '0';
+                    resultName = '(root)';
+                    msg = "危險：Client Root 在 Server 上保留了 Root 身份！";
+                } else if (clientUser === 'user') {
+                    resultUid = '1000';
+                    resultName = '(user)';
+                    msg = "普通使用者 UID 1000 直接映射為 UID 1000。";
+                } else {
+                    resultUid = '2025';
+                    resultName = '(custom)';
+                    msg = "自訂使用者直接映射。";
+                }
+            } else { // root_squash (default)
+                if (clientUser === 'root') {
+                    resultUid = '65534';
+                    resultName = '(nfsnobody)';
+                    msg = "Root 壓縮：為了保護 Server，Root 被強制降級為 nobody。";
+                } else if (clientUser === 'user') {
+                    resultUid = '1000';
+                    resultName = '(user)';
+                    msg = "普通使用者保留其 UID (1000)。";
+                } else {
+                    resultUid = '2025';
+                    resultName = '(custom)';
+                    msg = "自訂使用者保留其 UID (2025)。";
+                }
+            }
+
+            // Description for Client
+            const descMap = {
+                'root': 'Pod 以 Root 身份運行 (預設情況)。',
+                'user': 'Pod 配置了 securityContext: runAsUser: 1000。',
+                'custom': 'Pod 配置了特定的 User ID。'
+            };
+            document.getElementById('sim-client-desc').innerText = descMap[clientUser];
+
+            // Render Output
+            document.getElementById('sim-result-uid').innerText = resultUid;
+            document.getElementById('sim-result-user').innerText = resultName;
+            document.getElementById('sim-result-msg').innerText = msg;
+
+            // Styling Alert
+            const resElem = document.getElementById('sim-result-uid');
+            if (resultUid === '0') resElem.classList.add('text-rose-400');
+            else resElem.classList.remove('text-rose-400');
+        }
+
+        // --- Logic: K8s Best Practices ---
+        function toggleK8sMode(mode) {
+            const banner = document.getElementById('k8s-status-banner');
+            const podConfig = document.getElementById('k8s-pod-config');
+            const fsBox = document.getElementById('fs-box');
+            const fsPerms = document.getElementById('fs-perms');
+            const resultIcon = document.getElementById('k8s-result-icon');
+            const resultTitle = document.getElementById('k8s-result-title');
+            const resultDesc = document.getElementById('k8s-result-desc');
+            const traffic = document.getElementById('traffic-flow');
+            const codeSnippet = document.getElementById('code-snippet-container');
+
+            const btnBad = document.getElementById('btn-k8s-bad');
+            const btnGood = document.getElementById('btn-k8s-good');
+
+            if (mode === 'bad') {
+                // Button Styling
+                btnBad.classList.add('bg-rose-100', 'text-rose-700');
+                btnBad.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                btnGood.classList.remove('bg-emerald-100', 'text-emerald-700');
+                btnGood.classList.add('text-slate-600', 'hover:bg-slate-100');
+
+                banner.innerText = "模擬狀態：權限拒絕 (Permission Denied)";
+                banner.className = "absolute top-0 left-0 w-full py-2 text-center text-sm font-bold text-white bg-rose-500 rounded-t-xl transition-colors duration-500";
+
+                podConfig.innerHTML = `user: root (uid 0)<br>group: root (gid 0)`;
+
+                traffic.className = "absolute top-0 left-0 h-full w-full bg-rose-500 transition-all duration-1000"; // Blocked red flow
+
+                fsBox.className = "w-full bg-white border-2 border-rose-200 rounded-lg p-3 text-center transition-colors duration-500";
+                fsPerms.innerHTML = `Owner: root (0)<br>Mode: 755 (rwxr-xr-x)`;
+                fsPerms.className = "text-xs font-mono text-rose-600 font-bold";
+
+                resultIcon.innerText = "❌";
+                resultTitle.innerText = "失敗原因分析";
+                resultDesc.innerHTML = `Pod 預設以 root 運行。NFS 收到來自 uid 0 的寫入請求，因為 <code>root_squash</code>，將其映射為 <code>nobody</code> (uid 65534)。<br>NFS Server 上的資料夾權限是 755 (owner: root)，nobody 無權寫入。`;
+
+                codeSnippet.classList.add('hidden');
+
+            } else {
+                // Button Styling
+                btnGood.classList.add('bg-emerald-100', 'text-emerald-700');
+                btnGood.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                btnBad.classList.remove('bg-rose-100', 'text-rose-700');
+                btnBad.classList.add('text-slate-600', 'hover:bg-slate-100');
+
+                banner.innerText = "模擬狀態：寫入成功 (Success)";
+                banner.className = "absolute top-0 left-0 w-full py-2 text-center text-sm font-bold text-white bg-emerald-500 rounded-t-xl transition-colors duration-500";
+
+                podConfig.innerHTML = `user: root (0)<br><span class="text-emerald-600 font-bold">fsGroup: 2000</span>`;
+
+                traffic.className = "absolute top-0 left-0 h-full w-full bg-emerald-500 transition-all duration-1000"; // Flowing green
+
+                fsBox.className = "w-full bg-emerald-50 border-2 border-emerald-500 rounded-lg p-3 text-center transition-colors duration-500";
+                fsPerms.innerHTML = `Owner: root (0)<br><span class="text-emerald-600 font-bold">Group: 2000 (rwx)</span>`;
+                fsPerms.className = "text-xs font-mono text-emerald-700 font-bold";
+
+                resultIcon.innerText = "✅";
+                resultTitle.innerText = "成功機制 (Best Practice)";
+                resultDesc.innerHTML = `透過在 Pod Spec 設定 <code>fsGroup: 2000</code>，Kubernetes 會在掛載時自動將 Volume 的 Group ID 更改為 2000，並給予 Group 寫入權限 (g+w)。<br>即使 Pod 內部使用者被 Squash，只要該使用者屬於 GID 2000，即可順利寫入，無需放寬 NFS 的 <code>root_squash</code>。`;
+
+                codeSnippet.classList.remove('hidden');
+            }
+        }
+
+        // --- Initialization ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            setSimConfig('root_squash'); // init selection
+        });
+
+    </script>
+</body>
+
+</html>

@@ -46,5 +46,18 @@
             "Productivity"
         ],
         "color": "sky"
+    },
+    {
+        "title": "NFS & K8s Permission Lab",
+        "filename": "nfs-k8s-leaning.html",
+        "emoji": "🧪",
+        "description": "深入理解 NFS 參數與 Kubernetes 權限設定。透過互動式模擬器掌握 root_squash、UID/GID 對齊與最佳實踐。",
+        "tags": [
+            "NFS",
+            "Kubernetes",
+            "Storage",
+            "Permissions"
+        ],
+        "color": "emerald"
     }
 ]
