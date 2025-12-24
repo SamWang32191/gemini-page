@@ -1,0 +1,8 @@
+{
+    "track_id": "portal_optimization_20251224",
+    "type": "feature",
+    "status": "new",
+    "created_at": "2025-12-24T15:15:30Z",
+    "updated_at": "2025-12-24T15:15:30Z",
+    "description": "優化入口網站首頁與自動化工作流整合：重構 index.html 並建立 Git 模擬器示範頁面。"
+}

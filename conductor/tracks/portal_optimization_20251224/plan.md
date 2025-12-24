@@ -1,0 +1,17 @@
+# Track Plan: 優化入口網站首頁與自動化工作流整合
+
+## 階段 1: 基礎視覺與架構 (Phase 1: Base Visuals & Architecture)
+- [ ] 任務：分析並建立全域 CSS 設計系統 (變數、顏色、字體)
+- [ ] 任務：重構 `index.html` 基礎結構，導入卡片容器佈局
+- [ ] 任務：Conductor - 使用者手動驗證 '階段 1: 基礎視覺與架構' (協議詳見 workflow.md)
+
+## 階段 2: 首頁動態內容 (Phase 2: Homepage Dynamic Content)
+- [ ] 任務：撰寫 JavaScript 讓首頁動態讀取並渲染 `pages.json` 卡片
+- [ ] 任務：為卡片加入 Hover 動畫與微動效
+- [ ] 任務：Conductor - 使用者手動驗證 '階段 2: 首頁動態內容' (協議詳見 workflow.md)
+
+## 階段 3: Git 模擬器示範頁 (Phase 3: Git Simulator Lab)
+- [ ] 任務：建立 `git-lab.html` 結構並實作互動式 Git 概念預覽
+- [ ] 任務：整合「一鍵複製」功能與語義化標籤檢核
+- [ ] 任務：更新 `pages.json` 以包含 Git Lab 入口
+- [ ] 任務：Conductor - 使用者手動驗證 '階段 3: Git 模擬器示範頁' (協議詳見 workflow.md)
