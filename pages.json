@@ -84,5 +84,17 @@
             "chown"
         ],
         "color": "slate"
+    },
+    {
+        "title": "Agent Skills Workflow Visualizer",
+        "filename": "agent-skills-workflow/",
+        "emoji": "🧭",
+        "description": "互動式視覺化 Agent Skills 的 DEFINE、PLAN、BUILD、VERIFY、REVIEW、SIMPLIFY、SHIP 工程流程。",
+        "tags": [
+            "Agent Skills",
+            "Workflow",
+            "Interactive"
+        ],
+        "color": "purple"
     }
 ]

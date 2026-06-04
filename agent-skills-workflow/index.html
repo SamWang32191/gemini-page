@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent Skills Workflow Visualizer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Agent Skills</p>
+          <h1>Workflow Visualizer</h1>
+        </div>
+        <div class="summary-strip" aria-label="Repository summary">
+          <span><strong id="skillCount">24</strong> skills</span>
+          <span><strong>7</strong> commands</span>
+          <span><strong>3</strong> personas</span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="sidebar" aria-label="Workflow controls">
+          <label class="search-field" for="searchInput">
+            <span>搜尋 skill / command / persona</span>
+            <input id="searchInput" type="search" autocomplete="off" placeholder="例如 review、API、SHIP" />
+          </label>
+
+          <div class="control-group" aria-label="Display mode">
+            <p class="control-label">視圖</p>
+            <div class="segmented" role="tablist" aria-label="Display mode">
+              <button class="segment is-active" type="button" data-mode="workflow" role="tab" aria-selected="true">
+                Workflow
+              </button>
+              <button class="segment" type="button" data-mode="commands" role="tab" aria-selected="false">
+                Commands
+              </button>
+            </div>
+          </div>
+
+          <nav class="phase-nav" aria-label="Workflow phases" id="phaseNav"></nav>
+        </aside>
+
+        <section class="visual-area" aria-label="Interactive workflow map">
+          <div class="map-toolbar">
+            <div>
+              <p class="section-kicker">DEFINE → PLAN → BUILD → VERIFY → REVIEW → SIMPLIFY → SHIP</p>
+              <h2>技能驅動的工程流程</h2>
+            </div>
+            <button class="icon-button" id="resetButton" type="button" aria-label="Reset selection" title="Reset selection">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 4v6h6M20 20v-6h-6" />
+                <path d="M5.5 14.5A7 7 0 0 0 18 18M18.5 9.5A7 7 0 0 0 6 6" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flow-canvas" id="flowCanvas"></div>
+
+          <section class="detail-panel" aria-live="polite">
+            <div>
+              <p class="section-kicker" id="detailPhase">DEFINE</p>
+              <h2 id="detailTitle">Spec before code</h2>
+              <p id="detailBody"></p>
+            </div>
+            <dl class="detail-grid">
+              <div>
+                <dt>Command</dt>
+                <dd id="detailCommand"></dd>
+              </div>
+              <div>
+                <dt>Key skills</dt>
+                <dd id="detailSkills"></dd>
+              </div>
+              <div>
+                <dt>Output</dt>
+                <dd id="detailOutput"></dd>
+              </div>
+            </dl>
+          </section>
+        </section>
+
+        <aside class="inspector" aria-label="Selected workflow details">
+          <section class="inspector-section">
+            <p class="section-kicker">Agent behavior</p>
+            <h2 id="behaviorTitle">選一個階段</h2>
+            <ul class="check-list" id="behaviorList"></ul>
+          </section>
+
+          <section class="inspector-section">
+            <p class="section-kicker">Persona fan-out</p>
+            <h2>/ship 合併三種觀點</h2>
+            <div class="persona-stack" id="personaStack"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="./app.mjs"></script>
+  </body>
+</html>
