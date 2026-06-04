@@ -168,11 +168,29 @@ const connections = [
   ["simplify", "ship"]
 ];
 
+const flowNodeLayout = Object.freeze({
+  width: 170,
+  height: 114,
+  radius: 8,
+  contentX: 16,
+  phaseY: 24,
+  titleY: 48,
+  titleLineGap: 22,
+  commandY: 94,
+  connectorY: 57,
+  minTitleCommandGap: 22,
+  minBottomGap: 16
+});
+
 let selectedId = "define";
 let displayMode = "workflow";
 
 export function getStageById(id) {
   return workflowStages.find((stage) => stage.id === id) ?? null;
+}
+
+export function getFlowNodeLayout() {
+  return flowNodeLayout;
 }
 
 export function getConnections(stageId) {
@@ -249,15 +267,23 @@ function renderFlowMap(visibleStages) {
   svg.setAttribute("aria-label", "Agent Skills lifecycle workflow map");
 
   const lineLayer = createSvgElement("g");
+  const layout = getFlowNodeLayout();
   connections.forEach(([from, to]) => {
     const source = getStageById(from);
     const target = getStageById(to);
+    const sourceY = source.y + layout.connectorY;
+    const targetY = target.y + layout.connectorY;
     const line = createSvgElement("path");
     const isActive = from === selectedId || to === selectedId;
     line.setAttribute("class", `flow-line${isActive ? " is-active" : ""}`);
     line.setAttribute(
       "d",
-      `M ${source.x + 170} ${source.y + 40} C ${source.x + 220} ${source.y + 40}, ${target.x - 50} ${target.y + 40}, ${target.x} ${target.y + 40}`
+      [
+        `M ${source.x + layout.width} ${sourceY}`,
+        `C ${source.x + layout.width + 50} ${sourceY},`,
+        `${target.x - 50} ${targetY},`,
+        `${target.x} ${targetY}`
+      ].join(" ")
     );
     if (!visibleIds.has(from) || !visibleIds.has(to)) line.classList.add("is-muted");
     lineLayer.append(line);
@@ -275,32 +301,32 @@ function renderFlowMap(visibleStages) {
     group.setAttribute("aria-label", `${stage.phase}: ${stage.title}`);
 
     const rect = createSvgElement("rect");
-    rect.setAttribute("width", "170");
-    rect.setAttribute("height", "86");
-    rect.setAttribute("rx", "8");
+    rect.setAttribute("width", String(layout.width));
+    rect.setAttribute("height", String(layout.height));
+    rect.setAttribute("rx", String(layout.radius));
 
     const phase = createSvgElement("text");
     phase.setAttribute("class", "node-phase");
-    phase.setAttribute("x", "16");
-    phase.setAttribute("y", "24");
+    phase.setAttribute("x", String(layout.contentX));
+    phase.setAttribute("y", String(layout.phaseY));
     phase.textContent = stage.phase;
 
     const title = createSvgElement("text");
     title.setAttribute("class", "node-title");
-    title.setAttribute("x", "16");
-    title.setAttribute("y", "45");
+    title.setAttribute("x", String(layout.contentX));
+    title.setAttribute("y", String(layout.titleY));
     stage.nodeTitle.forEach((line, index) => {
       const tspan = createSvgElement("tspan");
-      tspan.setAttribute("x", "16");
-      tspan.setAttribute("dy", index === 0 ? "0" : "19");
+      tspan.setAttribute("x", String(layout.contentX));
+      tspan.setAttribute("dy", index === 0 ? "0" : String(layout.titleLineGap));
       tspan.textContent = line;
       title.append(tspan);
     });
 
     const command = createSvgElement("text");
     command.setAttribute("class", "node-command");
-    command.setAttribute("x", "16");
-    command.setAttribute("y", "72");
+    command.setAttribute("x", String(layout.contentX));
+    command.setAttribute("y", String(layout.commandY));
     command.textContent = stage.command;
 
     group.append(rect, phase, title, command);

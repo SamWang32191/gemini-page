@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { computeSummary, filterStages, getConnections, getStageById, workflowStages } from "./app.mjs";
+import * as app from "./app.mjs";
+
+const { computeSummary, filterStages, getConnections, getStageById, workflowStages } = app;
 
 test("workflow has the six lifecycle stages in order", () => {
   assert.deepEqual(
@@ -43,4 +45,24 @@ test("summary counts unique commands and skills", () => {
 
 test("unknown stage id returns null", () => {
   assert.equal(getStageById("missing"), null);
+});
+
+test("flow node text keeps title, command, and card edges separated", () => {
+  assert.equal(typeof app.getFlowNodeLayout, "function");
+
+  const layout = app.getFlowNodeLayout();
+  for (const stage of workflowStages) {
+    const lastTitleBaseline = layout.titleY + layout.titleLineGap * (stage.nodeTitle.length - 1);
+    const titleCommandGap = layout.commandY - lastTitleBaseline;
+    const bottomGap = layout.height - layout.commandY;
+
+    assert.ok(
+      titleCommandGap >= layout.minTitleCommandGap,
+      `${stage.id} title-to-command gap ${titleCommandGap}px is too tight`
+    );
+    assert.ok(
+      bottomGap >= layout.minBottomGap,
+      `${stage.id} command bottom gap ${bottomGap}px is too tight`
+    );
+  }
 });
