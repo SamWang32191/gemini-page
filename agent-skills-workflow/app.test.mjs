@@ -66,3 +66,18 @@ test("flow node text keeps title, command, and card edges separated", () => {
     );
   }
 });
+
+test("flow map viewport leaves horizontal breathing room around every node", () => {
+  assert.equal(typeof app.getFlowMapViewport, "function");
+
+  const layout = app.getFlowNodeLayout();
+  const viewport = app.getFlowMapViewport();
+  const minLeft = Math.min(...workflowStages.map((stage) => stage.x));
+  const maxRight = Math.max(...workflowStages.map((stage) => stage.x + layout.width));
+
+  assert.ok(minLeft >= viewport.minHorizontalGap, `left gap ${minLeft}px is too tight`);
+  assert.ok(
+    viewport.width - maxRight >= viewport.minHorizontalGap,
+    `right gap ${viewport.width - maxRight}px is too tight`
+  );
+});

@@ -182,6 +182,12 @@ const flowNodeLayout = Object.freeze({
   minBottomGap: 16
 });
 
+const flowMapViewport = Object.freeze({
+  width: 900,
+  height: 380,
+  minHorizontalGap: 48
+});
+
 let selectedId = "define";
 let displayMode = "workflow";
 
@@ -191,6 +197,10 @@ export function getStageById(id) {
 
 export function getFlowNodeLayout() {
   return flowNodeLayout;
+}
+
+export function getFlowMapViewport() {
+  return flowMapViewport;
 }
 
 export function getConnections(stageId) {
@@ -261,8 +271,9 @@ function renderFlowMap(visibleStages) {
   const canvas = document.querySelector("#flowCanvas");
   const visibleIds = new Set(visibleStages.map((stage) => stage.id));
   const svg = createSvgElement("svg");
+  const viewport = getFlowMapViewport();
   svg.setAttribute("class", "flow-map");
-  svg.setAttribute("viewBox", "0 0 840 380");
+  svg.setAttribute("viewBox", `0 0 ${viewport.width} ${viewport.height}`);
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", "Agent Skills lifecycle workflow map");
 
