@@ -5,7 +5,7 @@ export const workflowStages = [
     title: "Spec before code",
     nodeTitle: ["Spec", "before code"],
     command: "/spec",
-    color: "#0f766e",
+    color: "#06b6d4",
     x: 70,
     y: 70,
     skills: ["interview-me", "idea-refine", "spec-driven-development"],
@@ -24,7 +24,7 @@ export const workflowStages = [
     title: "Small verifiable tasks",
     nodeTitle: ["Small", "tasks"],
     command: "/plan",
-    color: "#2563eb",
+    color: "#3b82f6",
     x: 330,
     y: 70,
     skills: ["planning-and-task-breakdown"],
@@ -43,7 +43,7 @@ export const workflowStages = [
     title: "One slice at a time",
     nodeTitle: ["One slice", "at a time"],
     command: "/build",
-    color: "#b45309",
+    color: "#f59e0b",
     x: 590,
     y: 70,
     skills: ["incremental-implementation", "test-driven-development"],
@@ -62,7 +62,7 @@ export const workflowStages = [
     title: "Tests are proof",
     nodeTitle: ["Tests", "are proof"],
     command: "/test",
-    color: "#15803d",
+    color: "#10b981",
     x: 650,
     y: 245,
     skills: ["test-driven-development", "debugging-and-error-recovery", "browser-testing-with-devtools"],
@@ -81,7 +81,7 @@ export const workflowStages = [
     title: "Five-axis review",
     nodeTitle: ["Five-axis", "review"],
     command: "/review",
-    color: "#be123c",
+    color: "#f43f5e",
     x: 430,
     y: 245,
     skills: ["code-review-and-quality", "code-simplification", "security-and-hardening", "performance-optimization"],
@@ -100,7 +100,7 @@ export const workflowStages = [
     title: "Clarity over cleverness",
     nodeTitle: ["Clarity", "over clever"],
     command: "/code-simplify",
-    color: "#9333ea",
+    color: "#a855f7",
     x: 230,
     y: 245,
     skills: ["code-simplification", "code-review-and-quality"],
@@ -119,7 +119,7 @@ export const workflowStages = [
     title: "GO / NO-GO",
     nodeTitle: ["GO", "NO-GO"],
     command: "/ship",
-    color: "#4f46e5",
+    color: "#6366f1",
     x: 70,
     y: 245,
     skills: ["shipping-and-launch", "git-workflow-and-versioning", "ci-cd-and-automation"],
@@ -144,17 +144,17 @@ export const repoTotals = {
 export const personas = [
   {
     name: "code-reviewer",
-    color: "#be123c",
+    color: "#f43f5e",
     focus: "五軸 code review，特別看 correctness、architecture 與 maintainability。"
   },
   {
     name: "security-auditor",
-    color: "#b45309",
+    color: "#f59e0b",
     focus: "威脅模型、OWASP、secrets、auth/authz 與 dependency 風險。"
   },
   {
     name: "test-engineer",
-    color: "#2563eb",
+    color: "#3b82f6",
     focus: "測試策略、coverage gaps、happy path、edge case 與 regression proof。"
   }
 ];
@@ -428,6 +428,7 @@ function renderFlowMap(visibleStages) {
 }
 
 function renderDetail(stage) {
+  document.documentElement.style.setProperty("--active-phase-color", stage.color);
   document.querySelector("#detailPhase").textContent = stage.phase;
   document.querySelector("#detailPhase").style.color = stage.color;
   document.querySelector("#detailTitle").textContent = stage.title;
