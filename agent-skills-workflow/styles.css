@@ -272,10 +272,22 @@ h2 {
   background-size: 28px 28px;
 }
 
+.flow-canvas.is-compact {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .flow-map {
+  display: block;
   width: 100%;
   min-width: 760px;
   height: 410px;
+}
+
+.flow-map.is-compact {
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 712 / 390;
 }
 
 .flow-line {
@@ -480,11 +492,11 @@ h2 {
   }
 
   .flow-canvas {
-    min-height: 360px;
+    min-height: 0;
   }
 
   .flow-map {
-    min-width: 680px;
-    height: 340px;
+    min-width: 0;
+    height: auto;
   }
 }

@@ -4,6 +4,14 @@ import assert from "node:assert/strict";
 import * as app from "./app.mjs";
 
 const { computeSummary, filterStages, getConnections, getStageById, workflowStages } = app;
+const lifecycleConnections = [
+  ["define", "plan"],
+  ["plan", "build"],
+  ["build", "verify"],
+  ["verify", "review"],
+  ["review", "simplify"],
+  ["simplify", "ship"]
+];
 
 test("workflow has the six lifecycle stages in order", () => {
   assert.deepEqual(
@@ -80,4 +88,44 @@ test("flow map viewport leaves horizontal breathing room around every node", () 
     viewport.width - maxRight >= viewport.minHorizontalGap,
     `right gap ${viewport.width - maxRight}px is too tight`
   );
+});
+
+test("compact flow map fits narrow pages without horizontal clipping", () => {
+  assert.equal(typeof app.getFlowMapMode, "function");
+  assert.equal(typeof app.getFlowStagePosition, "function");
+
+  const mode = app.getFlowMapMode(716);
+  const layout = app.getFlowNodeLayout(mode);
+  const viewport = app.getFlowMapViewport(mode);
+
+  assert.equal(mode, "compact");
+  assert.ok(viewport.width <= 720, `compact viewport ${viewport.width}px is wider than the page`);
+
+  for (const stage of workflowStages) {
+    const position = app.getFlowStagePosition(stage, mode);
+    assert.ok(position.x >= viewport.minHorizontalGap, `${stage.id} clips on the left`);
+    assert.ok(
+      position.x + layout.width <= viewport.width - viewport.minHorizontalGap,
+      `${stage.id} clips on the right`
+    );
+  }
+});
+
+test("compact flow map connection curves stay inside the viewport", () => {
+  assert.equal(typeof app.getFlowConnectionPath, "function");
+
+  const mode = "compact";
+  const viewport = app.getFlowMapViewport(mode);
+  for (const [from, to] of lifecycleConnections) {
+    const source = getStageById(from);
+    const target = getStageById(to);
+    const path = app.getFlowConnectionPath(source, target, mode);
+    const values = path.match(/-?\d+(?:\.\d+)?/g).map(Number);
+    const xValues = values.filter((_, index) => index % 2 === 0);
+
+    for (const x of xValues) {
+      assert.ok(x >= 0, `${from}->${to} connection leaves compact viewport on the left`);
+      assert.ok(x <= viewport.width, `${from}->${to} connection leaves compact viewport on the right`);
+    }
+  }
 });

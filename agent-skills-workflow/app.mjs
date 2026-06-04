@@ -168,24 +168,56 @@ const connections = [
   ["simplify", "ship"]
 ];
 
-const flowNodeLayout = Object.freeze({
-  width: 170,
-  height: 114,
-  radius: 8,
-  contentX: 16,
-  phaseY: 24,
-  titleY: 48,
-  titleLineGap: 22,
-  commandY: 94,
-  connectorY: 57,
-  minTitleCommandGap: 22,
-  minBottomGap: 16
+const flowNodeLayouts = Object.freeze({
+  desktop: Object.freeze({
+    width: 170,
+    height: 114,
+    radius: 8,
+    contentX: 16,
+    phaseY: 24,
+    titleY: 48,
+    titleLineGap: 22,
+    commandY: 94,
+    connectorY: 57,
+    minTitleCommandGap: 22,
+    minBottomGap: 16
+  }),
+  compact: Object.freeze({
+    width: 140,
+    height: 112,
+    radius: 8,
+    contentX: 14,
+    phaseY: 23,
+    titleY: 46,
+    titleLineGap: 22,
+    commandY: 92,
+    connectorY: 56,
+    minTitleCommandGap: 20,
+    minBottomGap: 14
+  })
 });
 
-const flowMapViewport = Object.freeze({
-  width: 900,
-  height: 380,
-  minHorizontalGap: 48
+const flowMapViewports = Object.freeze({
+  desktop: Object.freeze({
+    width: 900,
+    height: 380,
+    minHorizontalGap: 48
+  }),
+  compact: Object.freeze({
+    width: 712,
+    height: 390,
+    minHorizontalGap: 24
+  })
+});
+
+const compactStagePositions = Object.freeze({
+  define: Object.freeze({ x: 28, y: 50 }),
+  plan: Object.freeze({ x: 200, y: 50 }),
+  build: Object.freeze({ x: 372, y: 50 }),
+  verify: Object.freeze({ x: 544, y: 50 }),
+  review: Object.freeze({ x: 372, y: 230 }),
+  simplify: Object.freeze({ x: 200, y: 230 }),
+  ship: Object.freeze({ x: 28, y: 230 })
 });
 
 let selectedId = "define";
@@ -195,12 +227,59 @@ export function getStageById(id) {
   return workflowStages.find((stage) => stage.id === id) ?? null;
 }
 
-export function getFlowNodeLayout() {
-  return flowNodeLayout;
+export function getFlowMapMode(availableWidth = Number.POSITIVE_INFINITY) {
+  return availableWidth <= 760 ? "compact" : "desktop";
 }
 
-export function getFlowMapViewport() {
-  return flowMapViewport;
+export function getFlowNodeLayout(mode = "desktop") {
+  return flowNodeLayouts[mode] ?? flowNodeLayouts.desktop;
+}
+
+export function getFlowMapViewport(mode = "desktop") {
+  return flowMapViewports[mode] ?? flowMapViewports.desktop;
+}
+
+export function getFlowStagePosition(stage, mode = "desktop") {
+  return mode === "compact" ? compactStagePositions[stage.id] ?? stage : { x: stage.x, y: stage.y };
+}
+
+export function getFlowConnectionPath(source, target, mode = "desktop") {
+  const layout = getFlowNodeLayout(mode);
+  const sourcePosition = getFlowStagePosition(source, mode);
+  const targetPosition = getFlowStagePosition(target, mode);
+
+  if (mode === "compact" && sourcePosition.y !== targetPosition.y) {
+    const sourceX = sourcePosition.x + layout.width / 2;
+    const sourceY = sourcePosition.y + layout.height;
+    const targetX = targetPosition.x + layout.width / 2;
+    const targetY = targetPosition.y;
+    return [
+      `M ${sourceX} ${sourceY}`,
+      `C ${sourceX} ${sourceY + 54},`,
+      `${targetX} ${targetY - 54},`,
+      `${targetX} ${targetY}`
+    ].join(" ");
+  }
+
+  if (targetPosition.x < sourcePosition.x) {
+    const sourceY = sourcePosition.y + layout.connectorY;
+    const targetY = targetPosition.y + layout.connectorY;
+    return [
+      `M ${sourcePosition.x} ${sourceY}`,
+      `C ${sourcePosition.x - 50} ${sourceY},`,
+      `${targetPosition.x + layout.width + 50} ${targetY},`,
+      `${targetPosition.x + layout.width} ${targetY}`
+    ].join(" ");
+  }
+
+  const sourceY = sourcePosition.y + layout.connectorY;
+  const targetY = targetPosition.y + layout.connectorY;
+  return [
+    `M ${sourcePosition.x + layout.width} ${sourceY}`,
+    `C ${sourcePosition.x + layout.width + 50} ${sourceY},`,
+    `${targetPosition.x - 50} ${targetY},`,
+    `${targetPosition.x} ${targetY}`
+  ].join(" ");
 }
 
 export function getConnections(stageId) {
@@ -271,31 +350,23 @@ function renderFlowMap(visibleStages) {
   const canvas = document.querySelector("#flowCanvas");
   const visibleIds = new Set(visibleStages.map((stage) => stage.id));
   const svg = createSvgElement("svg");
-  const viewport = getFlowMapViewport();
-  svg.setAttribute("class", "flow-map");
+  const mode = getFlowMapMode(canvas.clientWidth || window.innerWidth);
+  const viewport = getFlowMapViewport(mode);
+  canvas.classList.toggle("is-compact", mode === "compact");
+  svg.setAttribute("class", `flow-map is-${mode}`);
   svg.setAttribute("viewBox", `0 0 ${viewport.width} ${viewport.height}`);
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", "Agent Skills lifecycle workflow map");
 
   const lineLayer = createSvgElement("g");
-  const layout = getFlowNodeLayout();
+  const layout = getFlowNodeLayout(mode);
   connections.forEach(([from, to]) => {
     const source = getStageById(from);
     const target = getStageById(to);
-    const sourceY = source.y + layout.connectorY;
-    const targetY = target.y + layout.connectorY;
     const line = createSvgElement("path");
     const isActive = from === selectedId || to === selectedId;
     line.setAttribute("class", `flow-line${isActive ? " is-active" : ""}`);
-    line.setAttribute(
-      "d",
-      [
-        `M ${source.x + layout.width} ${sourceY}`,
-        `C ${source.x + layout.width + 50} ${sourceY},`,
-        `${target.x - 50} ${targetY},`,
-        `${target.x} ${targetY}`
-      ].join(" ")
-    );
+    line.setAttribute("d", getFlowConnectionPath(source, target, mode));
     if (!visibleIds.has(from) || !visibleIds.has(to)) line.classList.add("is-muted");
     lineLayer.append(line);
   });
@@ -304,9 +375,10 @@ function renderFlowMap(visibleStages) {
   workflowStages.forEach((stage) => {
     const group = createSvgElement("g");
     const isVisible = visibleIds.has(stage.id);
+    const position = getFlowStagePosition(stage, mode);
     group.setAttribute("class", `flow-node${stage.id === selectedId ? " is-active" : ""}${isVisible ? "" : " is-muted"}`);
     group.style.setProperty("--phase-color", stage.color);
-    group.setAttribute("transform", `translate(${stage.x}, ${stage.y})`);
+    group.setAttribute("transform", `translate(${position.x}, ${position.y})`);
     group.setAttribute("tabindex", "0");
     group.setAttribute("role", "button");
     group.setAttribute("aria-label", `${stage.phase}: ${stage.title}`);
